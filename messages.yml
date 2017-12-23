@@ -1,0 +1,56 @@
+Prefixes:
+  Prefix: '&b[&aGiveAll&b]&r'
+  ErrorPrefix: '&cErreur :&c'
+
+
+Error_Messages:
+  NoPermissionMessage: '*PREFIX* *ERROR* &cVous n''avez pas la permission de faire cela !'
+  GADoesntExist: '*PREFIX* *ERROR* &cCe GiveAll n''existe pas !'
+  GaAlreadyExists: '*PREFIX* *ERROR* &cCe GiveAll existe déjà !'
+  GAIsEmpty: '*PREFIX* *ERROR* &cImpossible de lancer ce GiveAll : il n'a pas d'item !'
+  GAForceStop: '*PREFIX* *ERROR* &cGiveAll arreté'
+  GAIsAlreadyStarted: '*PREFIX* *ERROR* Il y a déjà un GiveAll en cours ! GiveAll: &c&o*GIVEALL_NAME*'
+  NoGAInProgress: '*PREFIX* *ERROR* Il n'y a pas de GiveAll en cours'
+  TakeAnItem: '*PREFIX* *ERROR* Veuillez prendre un item dans votre main !'
+  Alone: '*PREFIX* *ERROR* Personne n'est connecté'
+  CantDeleteBecauseGAIsInProgress: '*PREFIX* *ERROR* Impossible de supprimer ce giveall car il est en cours !'
+
+WrongSyntax:
+  WrongSyntaxForTime: '*PREFIX* *ERROR* Temps invalide ! Entrez un nombre entier.'
+  WrongCommandSyntax_Start: '*PREFIX* *ERROR* /giveall start <nom> [instant]'
+  WrongCommandSyntaxIndication_Start: '*PREFIX* *ERROR* Si ''instant'' (ou ''i'') est mis, alors le GiveAll se lancera instantanément'
+  WrongCommandSyntax_Create: '*PREFIX* *ERROR* /giveall create <nom> [temps (en seconde)]'
+  WrongCommandSyntaxIndication_Create: '*PREFIX* *ERROR* Le GiveAll durera le temps indiqué. Si il n'est pas mis, il durera jusqu'à ce qu'il soit arreté manuellement.'
+
+Messages:
+  GAStartsInXSeconds: '*PREFIX* &aGiveAll dans &b*TIME_LEFT* &aseconde(s) ! &3&o(GiveAll: *GIVEALL_NAME*)'
+  GAStarts: '*PREFIX* &aLe GiveAll commence ! &3&o(GiveAll: *GIVEALL_NAME*)'
+  GAIsFinished: '*PREFIX* &aGiveAll fini ! Merci d'avoir participé !'
+  GAHasBeenStoppedByPlayer: '*PREFIX* &aLe GiveAll &b*GIVEALL_NAME*&a a été arreté par *PLAYER* !'
+  GAHasBeenStoppedByConsole: '*PREFIX* &aLe GiveAll &b*GIVEALL_NAME*&a a été arreté !'
+  GAHangSuccessfully: '*PREFIX* &aVous avez bien donné &b*ITEM*&a a &b*NUMBER* joueur(s)'
+  GAMustBeStoppedManually: '&aIl ne s'arrêtera que manuellement.' #Will be put at the end of the "GACreated" line.
+  GAWillBeStoppedAutomatically: 'Il s'arrêtera qu'après *SECONDS*&as.' #Will be put at the end of the "GACreated" line.
+  GACreated: '*PREFIX* &aGiveAll &b&l*GIVEALL_NAME*&a créé avec succès !'
+  GADeleted: '*PREFIX* &aVous avez bien supprimé le giveall &b&l*GIVEALL_NAME*&a !'
+  ItemAdded: '*PREFIX* &aVous avez bien ajouté &bvotre item &aaux items du GiveAll &b*GIVEALL_NAME* &7&o(item : *ITEM*)'
+  GAListIsEmpty: '*PREFIX* &aIl n'y a aucun giveall !'
+  GAList: '*PREFIX* &aGiveAll &f&o(*NUMBER*)&a : &b' #The list will be put right after this
+
+GUINames:
+  ConfirmDelete: '&cSupprimer &c&o*GIVEALL_NAME*'
+  EditItems: '*PREFIX* &b*GIVEALL_NAME*'
+  ListInGUI: '*PREFIX*'
+
+GUIItemsNames:
+  InfoGAWhenConfirmToDelete: '&eGiveAll : *GIVEALL_NAME*'
+  CancelDelete: '&cAnnuler'
+  ConfirmDelete: '&aSupprimer définitivement'
+  CloseGUIItem: '&cQuitter'
+  BackToGAList: '&cRetour à la liste des GiveAlls'
+  NextPage: '&fPage précédente'
+  PreviousPage: '&fPage suivante'
+  AddItemToGA: '&aAjouter un item'
+  GAList: '&aGiveAll &b*GIVEALL_NAME*'
+  LoreGAList: '||&7&m--------------------||&cClick molette: Supprimer un item||&cClick droit: supprimer||&cClick gauche: &c*ACTION*||&r||&7Statut: *STATUS*'
+  SeveralPageItem: '&e&oA venir: Multi-Pages' #Item between the "back" button and the "next" button. Not working yet (In an other update : Several Pages GUI)
