@@ -1,56 +1,324 @@
+	# Informations
+#
+# Testé avec:
+#	- Minecraft Spigot-1.12.2
+#	- Java 8
+#	- Skript 2.2-dev31c
+#	- les addons TuSKe 1.8.2-dev.7 ; Skript 2.2-dev31c ; SkQuery 3.21.4
+#
+# Prérequis:
+#	- Java 8
+#	- Minecraft Spigot (pas CraftBukkit)
+#	- Skript
+#	- Addons : TuSKe 1.7.7 minimum, Skript 2.2 minimum, SkQuery.
+#
+# Les Betas 3.1 et anterieures fonctionnent de la 1.8 à la 1.12.2 comprises.
+# Vous etes en version : Beta 3.2 (non testé en 1.8, 1.9, 1.10, 1.11, mais c'est censé fonctionné)
+#
+# Lien du script: https://skript-mc.fr/forum/resources/★-giveall-★.1424/
+#
+# To-Do:
+#	- Ajout d'un .yml pour la configuration
+#	- Ajout d'un système de Multi-Pages
+#	- Ajout d'autres langues dans la configuration (anglais)
+#	- Proposez vos idées !
+#
+# Bugs connus:
+#	- Certaines fois, quand on ajoute un item qui est déjà dans un GiveAll via le GUI "edit", l'ancien item devient fantôme.
+#			-> En cours...
+#	- Faites-moi part de vos bugs pour que je les corrige !
+#
+#
+# Vous n'avez pas le droit de revendre, ou de reposter ce skript sans ma permission.
+# Vous ne pouvez pas vous l'appropriez, ni le script entier, ni des petits bouts.
+# Vous ne pouvez pas prendre des bouts de mon script sans ma permission.
+#
+# Si vous voulez faire une vidéo de présentation, c'est super !
+# Mais n'oubliez pas de mettre le lien de téléchargement en description, de me citer et de me l'envoyer pour que je l'ajoute au poste.
+#
+# Merci beaucoup d'avoir téléchargé GiveAll, développé par ~noftaly
+#
+#! /!\IMPORTANT/!\ Si vous avez déjà un plugin/script de GiveAll d'installé, désactivez-le ou supprimez-le pour éviter les conflits !# (Surtout au niveau des commandes)
+
+
 Prefixes:
-  Prefix: '&b[&aGiveAll&b]&r'
-  ErrorPrefix: '&cErreur :&c'
+
+	Prefix: '&b[&aGiveAll&b]&r'
+	ErrorPrefix: '&cErreur :&c'
 
 
-Error_Messages:
-  NoPermissionMessage: '*PREFIX* *ERROR* &cVous n''avez pas la permission de faire cela !'
-  GADoesntExist: '*PREFIX* *ERROR* &cCe GiveAll n''existe pas !'
-  GaAlreadyExists: '*PREFIX* *ERROR* &cCe GiveAll existe déjà !'
-  GAIsEmpty: '*PREFIX* *ERROR* &cImpossible de lancer ce GiveAll : il n'a pas d'item !'
-  GAForceStop: '*PREFIX* *ERROR* &cGiveAll arreté'
-  GAIsAlreadyStarted: '*PREFIX* *ERROR* Il y a déjà un GiveAll en cours ! GiveAll: &c&o*GIVEALL_NAME*'
-  NoGAInProgress: '*PREFIX* *ERROR* Il n'y a pas de GiveAll en cours'
-  TakeAnItem: '*PREFIX* *ERROR* Veuillez prendre un item dans votre main !'
-  Alone: '*PREFIX* *ERROR* Personne n'est connecté'
-  CantDeleteBecauseGAIsInProgress: '*PREFIX* *ERROR* Impossible de supprimer ce giveall car il est en cours !'
 
-WrongSyntax:
-  WrongSyntaxForTime: '*PREFIX* *ERROR* Temps invalide ! Entrez un nombre entier.'
-  WrongCommandSyntax_Start: '*PREFIX* *ERROR* /giveall start <nom> [instant]'
-  WrongCommandSyntaxIndication_Start: '*PREFIX* *ERROR* Si ''instant'' (ou ''i'') est mis, alors le GiveAll se lancera instantanément'
-  WrongCommandSyntax_Create: '*PREFIX* *ERROR* /giveall create <nom> [temps (en seconde)]'
-  WrongCommandSyntaxIndication_Create: '*PREFIX* *ERROR* Le GiveAll durera le temps indiqué. Si il n'est pas mis, il durera jusqu'à ce qu'il soit arreté manuellement.'
+ErrorMessages:
+
+	#Mesage quand on a pas la permission de faire la commande. Aucun préfix n'est mis avant le message, alors il faut le mettre manuellement :)
+	NoPermission: '&b[&aGiveAll&b] &cErreur : Vous n'avez pas la permission de faire cela.'
+
+	#Message quand le GiveAll que l'on a marqué n'existe pas
+	GADoesntExist: '&cCe GiveAll n'existe pas.'
+
+	#Message quand le GiveAll que l'on a marqué existe déjà
+	GaAlreadyExists: '&cCe GiveAll existe déjà !'
+
+	#Message quand on veut faire une action alors que le GiveAll est vide (lancer/copier)
+	GAIsEmpty: '&cImpossible de faire cela : ce GiveAll n'a pas d'item !'
+
+	#Message quand on veut lancer un GiveAll alors qu'il y en a déjà un en cours
+	GAIsAlreadyStarted: '&cIl y a déjà un GiveAll en cours ! GiveAll: &c&o%{_ga}%'
+
+	#Message quand veut arreter un GiveAll alors qu'aucun n'est en cours
+	NoGAInProgress: '&cIl n'y a pas de GiveAll en cours'
+
+	#Message quand on veut ajouter/donner un item alors que l'on a rien en main
+	TakeAnItem: '&cVeuillez prendre un item dans votre main !'
+
+	#Message quand veut donner un item a tout le monde alors que personne n'est connecté
+	Alone: '&cPersonne n'est connecté'
+
+	#Message quand veut supprimer/renommer un GiveAll alors qu'il est en cours
+	CantModifyBecauseGAIsInProgress: '&cImpossible de faire cette action : ce giveall est en cours !'
+
+	#Message quand un joueur veut renomer un GiveAll avec un nom déjà pris
+	NewGAAlreadyExists: '&cLe nom %{_newName}% est déjà utilisé !'
+
+
+
+SyntaxError:
+
+	#Message quand veut entrer la durée d'un GiveAll, et que l'on a pas mis un nombre entier
+	WrongSyntaxForTime: '&cTemps invalide ! Entrez un nombre entier.'
+
+	#Message quand on se trompe dans la syntaxe du /ga start. (il y a deux lignes)
+	WrongCommandSyntax_Start: '&c/giveall start <nom> [instant]'
+	WrongCommandSyntaxIndication_Start: '&cSi 'instant' (ou 'i') est mis, alors le GiveAll se lancera instantanément'
+
+	#Message quand on se trompe dans la syntaxe du /ga create. (il y a deux lignes)
+	WrongCommandSyntax_Create: '&c/giveall create <nom> [temps (en seconde)]'
+	WrongCommandSyntaxIndication_Create: '&cLe GiveAll durera le temps indiqué. Si il n'est pas mis, il durera jusqu'à ce qu'il soit arreté manuellement.'
+
+	#Message quand on se trompe dans la syntaxe du /ga add.
+	WrongCommandSyntax_Add: '&c/giveall add <nom>'
+
+	#Message quand on se trompe dans la syntaxe du /ga edit.
+	WrongCommandSyntax_EditItem: '&c/giveall edit[item] <nom>'
+
+	#Message quand on se trompe dans la syntaxe du /ga rename.
+	WrongCommandSyntax_Rename: '&c/giveall rename <ancien nom> <nouveau nom>'
+
+	#Message quand on se trompe dans la syntaxe du /ga copy.
+	WrongCommandSyntax_CopyContent: '&c/giveall copy <GiveAll 1> <GiveAll 2>'
+	WrongCommandSyntaxIndication_CopyContent: '&cGiveAll 1 = Nom du GiveAll dont les items doivent être copié'
+	WrongCommandSyntaxIndication_CopyContent2: '&cGiveAll 2 = Nom du GiveAll où les items vont être copié'
+
+	#Message quand on se trompe dans la syntaxe du /ga clear.
+	WrongCommandSyntax_Clear: '&c/giveall clear <nom>'
+
+	#Message quand on se trompe dans la syntaxe du /ga changetime.
+	WrongCommandSyntax_ChangeTime: '&c/giveall changetime <nom> <temps (en seconde)>'
+
+	#Message quand on se trompe dans la syntaxe du /ga modify.
+	WrongCommandSyntax_Modify: '&c/giveall modify <nom>'
+
+
 
 Messages:
-  GAStartsInXSeconds: '*PREFIX* &aGiveAll dans &b*TIME_LEFT* &aseconde(s) ! &3&o(GiveAll: *GIVEALL_NAME*)'
-  GAStarts: '*PREFIX* &aLe GiveAll commence ! &3&o(GiveAll: *GIVEALL_NAME*)'
-  GAIsFinished: '*PREFIX* &aGiveAll fini ! Merci d'avoir participé !'
-  GAHasBeenStoppedByPlayer: '*PREFIX* &aLe GiveAll &b*GIVEALL_NAME*&a a été arreté par *PLAYER* !'
-  GAHasBeenStoppedByConsole: '*PREFIX* &aLe GiveAll &b*GIVEALL_NAME*&a a été arreté !'
-  GAHangSuccessfully: '*PREFIX* &aVous avez bien donné &b*ITEM*&a a &b*NUMBER* joueur(s)'
-  GAMustBeStoppedManually: '&aIl ne s'arrêtera que manuellement.' #Will be put at the end of the "GACreated" line.
-  GAWillBeStoppedAutomatically: 'Il s'arrêtera qu'après *SECONDS*&as.' #Will be put at the end of the "GACreated" line.
-  GACreated: '*PREFIX* &aGiveAll &b&l*GIVEALL_NAME*&a créé avec succès !'
-  GADeleted: '*PREFIX* &aVous avez bien supprimé le giveall &b&l*GIVEALL_NAME*&a !'
-  ItemAdded: '*PREFIX* &aVous avez bien ajouté &bvotre item &aaux items du GiveAll &b*GIVEALL_NAME* &7&o(item : *ITEM*)'
-  GAListIsEmpty: '*PREFIX* &aIl n'y a aucun giveall !'
-  GAList: '*PREFIX* &aGiveAll &f&o(*NUMBER*)&a : &b' #The list will be put right after this
 
-GUINames:
-  ConfirmDelete: '&cSupprimer &c&o*GIVEALL_NAME*'
-  EditItems: '*PREFIX* &b*GIVEALL_NAME*'
-  ListInGUI: '*PREFIX*'
+	#Message du compte à rebours, lors du lancement d'un GiveAll.
+	#PlaceHolders: %{_time.left}% pour indiquer le temps restant
+	#PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	GAStartsInXSeconds: '&aGiveAll dans &b%{_time.left}% &aseconde(s) ! &3&o(GiveAll: %{_ga}%)'
 
-GUIItemsNames:
-  InfoGAWhenConfirmToDelete: '&eGiveAll : *GIVEALL_NAME*'
-  CancelDelete: '&cAnnuler'
-  ConfirmDelete: '&aSupprimer définitivement'
-  CloseGUIItem: '&cQuitter'
-  BackToGAList: '&cRetour à la liste des GiveAlls'
-  NextPage: '&fPage précédente'
-  PreviousPage: '&fPage suivante'
-  AddItemToGA: '&aAjouter un item'
-  GAList: '&aGiveAll &b*GIVEALL_NAME*'
-  LoreGAList: '||&7&m--------------------||&cClick molette: Supprimer un item||&cClick droit: supprimer||&cClick gauche: &c*ACTION*||&r||&7Statut: *STATUS*'
-  SeveralPageItem: '&e&oA venir: Multi-Pages' #Item between the "back" button and the "next" button. Not working yet (In an other update : Several Pages GUI)
+	#Message quand le GiveAll commence
+	#PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	GAStarts: '&aLe GiveAll commence ! &3&o(GiveAll: %{_ga}%)'
+
+	#Message quand le GiveAll se finit
+	#PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	GAIsFinished: '&aGiveAll fini ! Merci d'avoir participé !'
+
+	#Message quand le GiveAll est arreté par un joueur
+	#PlaceHolders: %{_player}% pour indiquer le joueur
+	#PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	GAHasBeenStoppedByPlayer: '&aLe GiveAll &b%{_ga}%&a a été arreté par %{_player}% !'
+
+	#Message quand le GiveAll est arreté par la console
+	#PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	GAHasBeenStoppedByConsole: '&aLe GiveAll &b%{_ga}%&a a été arreté !'
+
+	#Message quand on fait /ga givehand
+	#PlaceHolders: %{_item}% pour indiquer l'item donné
+	#PlaceHolders: %{_number}% pour indiquer à combien de joeur on l'a donné
+	GAHandHasBeenGiven: '&aVous avez bien donné &b%{_item}%&a a &b%{_number}% joueur(s)'
+
+	#Broadcast quand on fait /ga givehand
+	#PlaceHolders: %{_item}% pour indiquer l'item donné
+	#PlaceHolders: %{_player}% pour indiquer le joueur qui a donné les items
+	GAHandBroadcast: '&b%{_player}%&a à donné &b%{_item}% &aà tout le monde !'
+
+	#Petit ajout qui sera mis à la place du "%{_stop}%" dans "GACreated", qui indique la façon dont le GiveAll doit être stoppé
+	#PlaceHolders: %{_seconds}% pour indiquer combien de secondes il va durer.
+	GAMustBeStoppedManually: '&aIl ne s'arrêtera que manuellement.' #Ce sera mis à la place du "%{_stop}%" dans la ligne "GACreated"
+	GAWillBeStoppedAutomatically: 'Il s'arrêtera qu'après %{_seconds}%&as.' #Ce sera mis à la place du "%{_stop}%" dans la ligne "GACreated"
+
+	#Message quand on crée un GiveAll
+	#PlaceHolders: %{_stop}% qui renvoie la façon dont le GiveAll va êter stoppé
+	GACreated: '&aGiveAll &b&l%{_ga}%&a créé avec succès ! %{_stop}%'
+
+	#Message quand on supprime un GiveAll
+	#PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	GADeleted: '&aVous avez bien supprimé le giveall &b&l%{_ga}%&a !'
+
+	#Message quand on ajoute un item à un GiveAll
+	#PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	#PlaceHolders: %{_item}% pour indiquer le nom de l'item que l'on a ajouté
+	ItemAdded: '&aVous avez bien ajouté &bvotre item &aaux items du GiveAll &b%{_ga}% &7&o(item : %{_item}%)'
+
+	#Message quand on renome un GiveAll
+	#PlaceHolders: %{_ga}% pour indiquer l'ancien nom du GiveAll
+	#PlaceHolders: %{_newName}% pour indiquer le nouveau nom du GiveAll
+	RenamedSuccessfully: '&aVous avez bien renommé le GiveAll &b%{_ga}% &aen &b%{_newName}% &a!'
+
+	#Message quand on copy les items d'un GiveAll dans un autre
+	#PlaceHolders: %{_ga1}% pour indiquer le nom du GiveAll dont les items doivent être copié
+	#PlaceHolders: %{_ga2}% pour indiquer le nom du GiveAll où les items vont être copié
+	SuccessfullyCopied: '&aVous avez bien ajouté les items du GiveAll &b%{_ga1}% &adans &b%{_ga2}%&a !'
+
+	#Message quand on clear les items d'un GiveAll
+	#PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	SuccessfullyCleared: '&aVous avez bien supprimé les items du GiveAll &b%{_ga}%'
+
+	#Message quand on change la durée d'un GiveAll
+	#PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	#PlaceHolders: %{_time}% pour indiquer la durée du GiveAll
+	SuccessfullyChangedTime: '&aVous avez bien changé la durée du GiveAll &b%{_ga}%&a (%{_time}%s)'
+
+
+
+ListConfiguration:
+
+	#Couleur de la virgule et du "et" dans la liste des GiveAlls
+	ComaColorInList: '&a'
+	#Couleur des GiveAlls dans la liste des GiveAlls
+	GAColorInList: '&b'
+	#Message quand la liste des GiveAlls est vide
+	GAListIsEmpty: '&aIl n'y a aucun giveall !'
+	#Message de la liste des GiveAlls
+	#PlaceHolders: %{_number}% pour indiquer le nombre de GiveAll qu'il y a.
+	GAList: '&aListe des GiveAlls &f&o(%{_number}%) &a:&b'
+
+
+
+GUIName:
+
+	#Nom du GUI de la confirmation de la suppression d'un GiveAll
+	#PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	ConfirmDeleteGUI: '&cSupprimer &c&o%{_ga}%'
+
+	#Nom du GUI pour éditer les items d'un GiveAll
+	#PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	EditItems: '&b[&aGiveAll&b] &b%{_ga}%'
+
+	#Nom du GUI de la liste des GiveAlls
+	TitleGUIList: '&b[&aGiveAll&b]'
+
+	#Nom du GUI pour modifier les paramètres d'un GiveAll
+	#PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	ModifyGA: '&aGiveAll &b%{_ga}%'
+
+
+
+ItemName:
+
+	#Nom du livre pour indiquer le nom du GiveAll (dans le GUI de confirmation de suppression et de modification des paramètres)
+	#PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	InfoGAName: '&eGiveAll : %{_ga}%'
+
+	#Nom du colorant pour annuler la suppression d'un GiveAll
+	CancelDelete: '&cAnnuler'
+
+	#Nom de la slimebann pour confirmer la suppression d'un GiveAll
+	ConfirmDelete: '&aSupprimer définitivement'
+
+	#Nom du "barrier" pour fermer un GUI
+	CloseGUIItem: '&cQuitter'
+
+	#Nom de la flèche pour retourner à la liste
+	BackToGAList: '&cRetour à la liste des GiveAlls'
+
+	#Nom de la feuille pour aller à la page suivante
+	NextPage: '&fPage suivante'
+
+	#Nom de la feuille pour aller à la page précédente
+	PreviousPage: '&fPage précédente'
+
+	#Nom du block en or pour ajouter un item
+	AddItemToGA: '&aAjouter un item'
+
+	#Nom du livre, dans la liste des GiveAlls
+	#PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	GAListItem: '&aGiveAll &b%{_ga}%'
+
+	#Lore du livre, dans la liste des GiveAlls
+	#PlaceHolders: %{_action}% pour indiquer ce qui se passe quand on clique sur le GUI ("lancer" ou "arreter")
+	#PlaceHolders: %{_satut}% pour indiquer le statut du GiveAll ("en cours..." ou "arreté")
+	#PlaceHolders: %{_nbitem}% pour indiquer le nombre d'items du GiveAll
+	#PlaceHolders: %{_time}% pour indiquer la durée du GiveAll
+	#PlaceHolders: || pour sauter des lignes
+	LoreGAList: '||&7&m--------------------||&cClick molette: &c&oSupprimer un item||&cClick droit: &c&osupprimer||&cClick gauche: &c&o%{_action}%||&cShift click gauche: &c&omodifier les paramètres||&r||&7&m--------------------||&e&oInformations||&aNombre d'items: &b%{_nbitem}%||&aDurée: &b%{_time}%||&aStatut: &b%{_statut}%'
+
+	#Nom de l'item de décoration, entre les deux boutons
+	SeveralPageItem: '&e&oA venir: Multi-Pages' #L'item entre le boutton 'page suivante' et 'page précédente'. Il sera remplacé dans le futur par le numéro de la page (Update multipage à venir)
+
+	#L'action que va executer le click gauche (quand on clique alors qu'il n'est pas lancé) (dans la liste GUI et dans le /ga modify)
+	LeftClickActionStart: '&clancer'
+
+	#L'action que va executer le click gauche (quand on clique alors qu'il est lancé) (dans la liste GUI et dans le /ga modify)
+	LeftClickActionStop: '&carrêter'
+
+	#Le status du GiveAll (quand il est en cours)
+	StatusInProgress: 'En cours...'
+
+	#Le status du GiveAll (quand il est arreté)
+	StatusStop: 'arreté'
+
+	#Item pour clear les items d'un GiveAll (via le GUI EditItems)
+	ClearGA: '&cClear les items du GiveAll'
+
+	#Quand un GiveAll est infini (dans la liste des GiveAll)
+	InifiteTimeForGUIList: 'Infinie'
+
+	#Nom de l'item pour renommer un GiveAll dans le GUI pour modifier les paramètres d'un GiveAll
+	GAModifyRename: '&eRenommer'
+
+	#Nom de l'item pour modifier les items d'un Giveall, dans le GUI pour modifier les paramètres d'un GiveAll
+	GAEditItems: '&eModifier les items'
+
+
+
+Command:
+
+	#Nom de la commande principale
+	MainCommand: 'GiveAll' #Peu importe les majuscules/minuscules
+
+	#Nom des alias
+	AliasesCommands: 'ga, givea, gall, give-all' #Séparer avec une virgule
+
+Permission:
+	
+	#Permissions.
+	PermissionAll: 'giveall.*'
+	PermissionCreate: 'giveall.create'
+	PermissionStart: 'giveall.start'
+	PermissionReload: 'giveall.reload'
+	PermissionStop: 'giveall.stop'
+	PermissionGiveHand: 'giveall.givehand'
+	PermissionDelete: 'giveall.delete'
+	PermissionAddItem: 'giveall.additem'
+	PermissionEditItem: 'giveall.edititem'
+	PermissionChatList: 'giveall.list.chat'
+	PermissionGUIList: 'giveall.list.gui'
+	PermissionRename: 'giveall.rename'
+	PermissionHelp: 'giveall.help'
+	PermissionUpdateCheck: 'giveall.updatecheck'
+	PermissionCopyContent: 'giveall.copycontent'
+	PermissionClearGA: 'giveall.clear'
+	PermissionModify: 'giveall.modify'
