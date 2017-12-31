@@ -1,44 +1,12 @@
 # Informations
 #
-# Testé avec:
-#	- Minecraft Spigot-1.12.2
-#	- Java 8
-#	- Skript 2.2-dev31c
-#	- les addons TuSKe 1.8.2-dev.7 ; Skript 2.2-dev31c ; SkQuery 3.21.4
-#
-# Prérequis:
-#	- Java 8
-#	- Minecraft Spigot (pas CraftBukkit)
-#	- Skript
-#	- Addons : TuSKe 1.7.7 minimum, Skript 2.2 minimum, SkQuery.
-#
-# Les Betas 3.1 et anterieures fonctionnent de la 1.8 à la 1.12.2 comprises.
-# Vous etes en version : Beta 3.2 (non testé en 1.8, 1.9, 1.10, 1.11, mais c'est censé fonctionné)
-#
 # Lien du script: https://skript-mc.fr/forum/resources/★-giveall-★.1424/
-#
-# To-Do:
-#	- Ajout d'un .yml pour la configuration
-#	- Ajout d'un système de Multi-Pages
-#	- Ajout d'autres langues dans la configuration (anglais)
-#	- Proposez vos idées !
-#
-# Bugs connus:
-#	- Certaines fois, quand on ajoute un item qui est déjà dans un GiveAll via le GUI "edit", l'ancien item devient fantôme.
-#			-> En cours...
-#	- Faites-moi part de vos bugs pour que je les corrige !
-#
 #
 # Vous n'avez pas le droit de revendre, ou de reposter ce skript sans ma permission.
 # Vous ne pouvez pas vous l'appropriez, ni le script entier, ni des petits bouts.
 # Vous ne pouvez pas prendre des bouts de mon script sans ma permission.
 #
-# Si vous voulez faire une vidéo de présentation, c'est super !
-# Mais n'oubliez pas de mettre le lien de téléchargement en description, de me citer et de me l'envoyer pour que je l'ajoute au poste.
-#
 # Merci beaucoup d'avoir téléchargé GiveAll, développé par ~noftaly
-#
-#! /!\IMPORTANT/!\ Si vous avez déjà un plugin/script de GiveAll d'installé, désactivez-le ou supprimez-le pour éviter les conflits !# (Surtout au niveau des commandes)
 
 
 Prefixes:
@@ -303,7 +271,7 @@ Command:
 	AliasesCommands: 'ga, givea, gall, give-all' #Séparer avec une virgule
 
 Permission:
-	
+
 	#Permissions.
 	PermissionAll: 'giveall.*'
 	PermissionCreate: 'giveall.create'
