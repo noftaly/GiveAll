@@ -1,6 +1,6 @@
 # Informations
 #
-# Lien du script: https://skript-mc.fr/forum/resources/★-giveall-★.1424/
+# Lien du script: https://bit.ly/2tLQ1nR
 #
 # Vous n'avez pas le droit de revendre, ou de reposter ce skript sans ma permission.
 # Vous ne pouvez pas vous l'appropriez, ni le script entier, ni des petits bouts.
@@ -10,13 +10,470 @@
 
 
 Prefixes:
-
   Prefix: '&b[&aGiveAll&b]&r'
   ErrorPrefix: '&cErreur :&c'
 
 
-
 ErrorMessages:
-
   #Mesage quand on a pas la permission de faire la commande. Aucun préfix n'est mis avant le message, alors il faut le mettre manuellement :)
   NoPermission: '&b[&aGiveAll&b] &cErreur : Vous n''avez pas la permission de faire cela.'
+
+  #Message quand le GiveAll que l'on a marqué n'existe pas
+  GADoesntExist: '&cCe GiveAll n''existe pas '
+
+  #Message quand le GiveAll que l'on a marqué existe déjà
+  GaAlreadyExists: '&cCe GiveAll existe déjà !'
+
+  #Message quand on veut faire une action alors que le GiveAll est vide (lancer/copier)
+  GAIsEmpty: '&cImpossible de faire cela : ce GiveAll n''a pas d''item !'
+
+  #Message quand on veut lancer un GiveAll alors qu'il y en a déjà un en cours
+  GAIsAlreadyStarted: '&cIl y a déjà un GiveAll en cours ! GiveAll: ''&c&o%{_ga}%'
+
+  #Message quand veut arreter un GiveAll alors qu'aucun n'est en cours
+  NoGAInProgress: '&cIl n''y a pas de GiveAll en cours'
+
+  #Message quand on veut ajouter/donner un item alors que l'on a rien en main
+  TakeAnItem: '&cVeuillez prendre un item dans votre main !'
+
+  #Message quand veut donner un item a tout le monde alors que personne n'est connecté
+  Alone: '&cPersonne n''est connecté'
+
+  #Message quand veut supprimer/renommer un GiveAll alors qu'il est en cours
+  CantModifyBecauseGAIsInProgress: '&cImpossible de faire cette action : ce giveall est en cours !'
+
+  #Message quand un joueur veut renomer un GiveAll avec un nom déjà pris
+  NewGAAlreadyExists: '&cLe nom %{_newName}% est déjà utilisé !'
+
+  #Message quand on veut entrer un nombre plus petit que 10
+  TimeForCDIsTooSmall: '&cVeuillez entrer un nombre plus grand ou égal à 10 !'
+
+  #Message quand on veut entrer un nomber plus petit que 0
+  TimeForDurationIsTooSmall: '&cVeuillez entrer un nombre plus grand ou égal à 0 !'
+
+  #Message quand on veut supprimer/voir les conditions d'un GiveAll alors qu'il n'en a pas
+NoConditionToClear: '&cCe GiveAll n''a pas de condition !'
+
+  #Message quand on mets autre chose qu'un nombre
+  InvalidNumber: '&cNombre invalide ! Assurez-vous d'avoir mis un nombre entier'
+
+  #Message quand on fait /ga set cond <ga> inrg ou notinrg mais que l'on n'est pas dans une région
+  NotInARegion: '&cVous n''etes pas dans une région !'
+
+  #Message quand on veut ajouter un joueur a la blacklist d'un GiveAll alors qu'il y est déjà
+  #PlaceHolders: %{_p}% pour indiquer le joueur'
+  #PlaceHolders: %{_ga}% pour indiquer le giveall sur lequel le joueur est blacklist
+  PlayerAlreadyBlacklist: '&cCe joueur est déjà sur la blacklist de ce GiveAll'
+
+  #Message quand on veut enlever un joueur de la blacklist d'un GiveAll alors qu'il n'y est pas
+  #PlaceHolders: %{_p}% pour indiquer le joueur
+  #PlaceHolders: %{_ga}% pour indiquer le giveall sur lequel le joueur est blacklist
+  PlayerNoBlacklist: '&cCe joueur n''est pas sur la blacklist de ce GiveAll'
+
+  #Message d'erreur quand on veut ajouter à/enlever de la blacklist un joueur mais qu'on entre un pseudo qui n'existe pas
+  #PlaceHolders: %{_p}% pour indiquer le joueur'
+  InvalidPlayer: '&c%{_p}% ne s''est jamais connecté ou n''est pas un joueur !'
+
+  #Message d'erreur quand on veut blacklist un joueur alors qu'il est exempté
+  #PlaceHolders: %{_p}% pour indiquer le joueur
+  PlayerIsExemptedOfBlacklist: '&cCe joueur est exempté des blacklists !'
+
+
+SyntaxeError:
+
+  #Message quand on se trompe dans la syntaxe du /ga start. (il y a deux lignes)
+  WrongCommandSyntax_Start: '&c/giveall start <nom> [instant]'
+  WrongCommandSyntaxIndication_Start: '&cSi ''instant'' (ou ''i'') est mis, alors le GiveAll se lancera instantanément'
+
+  #Message quand on se trompe dans la syntaxe du /ga create. (il y a deux lignes)
+  WrongCommandSyntax_Create: '&c/giveall create <nom> [temps (en seconde)]'
+  WrongCommandSyntaxIndication_Create: '&cLe GiveAll durera le temps indiqué. Si il n''est pas mis, il durera jusqu''à ce qu''il soit arreté manuellement.'
+
+  #Message quand on se trompe dans la syntaxe du /ga add.
+  WrongCommandSyntax_Add: '&c/giveall add <nom>'
+
+  #Message quand on se trompe dans la syntaxe du /ga edit.
+  WrongCommandSyntax_EditItem: '&c/giveall edit[item] <nom>'
+
+  #Message quand on se trompe dans la syntaxe du /ga rename.
+  WrongCommandSyntax_Rename: '&c/giveall rename <ancien nom> <nouveau nom>'
+
+  #Message quand on se trompe dans la syntaxe du /ga copy.
+  WrongCommandSyntax_CopyContent: '&c/giveall copy <GiveAll 1> <GiveAll 2>'
+  WrongCommandSyntaxIndication_CopyContent: '&cGiveAll 1 = Nom du GiveAll dont les items doivent être copié'
+  WrongCommandSyntaxIndication_CopyContent2: '&cGiveAll 2 = Nom du GiveAll où les items vont être copié'
+
+  #Message quand on se trompe dans la syntaxe du /ga clear.
+  WrongCommandSyntax_Clear: '&c/giveall clear <nom>'
+
+  #Message quand on se trompe dans la syntaxe du /ga changetime.
+  WrongCommandSyntax_ChangeTime: '&c/giveall changetime <nom> <temps (en seconde)>'
+
+  #Message quand on se trompe dans la syntaxe du /ga modify.
+  WrongCommandSyntax_Modify: '&c/giveall modify <nom>'
+
+  #Message quand on se trompe dans la syntaxe du /ga countdown.
+  WrongCommandSyntax_ChangeCD: '&c/giveall countdown <nom> <temps (en seconde)>'
+
+  #Message quand on se trompe dans la syntaxe du /ga condition.
+  WrongCommandSyntax_Condition: '&c/giveall condition <see/set/clear> <nom> [condition] [valeur]'
+
+  #Message quand on fait /ga cond set <nom> <condition> mais qu'on se trompe dans la condition
+  WrongCondition: '&cCondition invalide ! Liste : ''msg-same'', ''msg-contain'', ''perm'', ''min-kill'', ''max-kill'', ''min-death'', ''max-death'', ''min-money'', ''max-money'', ''min-co'', ''max-co'', ''in-region'', ''not-in-region'', ''in-world'', ''not-in-world'', ''delete''.'
+
+  #Message quand on se trompe dans la syntaxe du /ga duplicate.
+  WrongCommandSyntax_Duplicate: '&c/giveall duplicate <nom>'
+
+  #Message quand on se trompe dans la syntaxe du /ga cond set <ga> playtime
+  WrongCommandSyntaxIndication_PlayTimeCondition: '&cDans [valeur], mettez : <heure> <min> &7&o(&7&o&navec un espace entre les deux&7&o)'
+
+  #Message quand on se trompe dans la syntaxe du /ga blacklist.
+  WrongCommandSyntax_Blacklist: '&c/giveall blacklist add/remove/info'
+
+  #Message quand on se trompe dans la syntaxe du /ga blacklist add.
+  WrongCommandSyntax_BlacklistAdd: '&c/giveall blacklist add <joueur> <giveall>'
+
+  #Message quand on se trompe dans la syntaxe du /ga blacklist remove.
+  WrongCommandSyntax_BlacklistRemove: '&c/giveall blacklist remove <joueur> <giveall>'
+
+  #Message quand on se trompe dans la syntaxe du /ga blacklist info.
+  WrongCommandSyntax_BlacklistInfo: '&c/giveall blacklist info <player/giveall> <valeur>'
+
+  #Message quand on se trompe dans la syntaxe du /ga blacklist list.
+  WrongCommandSyntax_BlacklistList: '&c/giveall blacklist list <giveall>'
+
+  #Nom/Lore des items quand aucune condition n'est mise (apparait dans la liste en gui, et dans le menu pour modifier la condition)
+  NoConditionSet: '&7Aucune condition'
+
+Messages:
+
+  #Message du compte à rebours, lors du lancement d'un GiveAll.
+  #PlaceHolders: %{_time.left}% pour indiquer le temps restant
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  GAStartsInXSeconds: '&aGiveAll dans &b%{_time.left}% &aseconde(s) ! &3&o(GiveAll: %{_ga}%)'
+
+  #Message quand le GiveAll commence
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  GAStarts: '&aLe GiveAll commence ! &3&o(GiveAll: %{_ga}%)'
+
+  #Message quand le GiveAll se finit
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  GAIsFinished: '&aGiveAll fini ! Merci d''avoir participé !'
+
+  #Message quand le GiveAll est arreté par un joueur
+  #PlaceHolders: %{_player}% pour indiquer le joueur
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  GAHasBeenStoppedByPlayer: '&aLe GiveAll &b%{_ga}%&a a été arreté par %{_player}% !'
+
+  #Message quand le GiveAll est arreté par la console
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  GAHasBeenStoppedByConsole: '&aLe GiveAll &b%{_ga}%&a a été arreté !'
+
+  #Message quand on fait /ga givehand
+  #PlaceHolders: %{_item}% pour indiquer l'item donné
+  #PlaceHolders: %{_number}% pour indiquer à combien de joeur on l'a donné
+  GAHandHasBeenGiven: '&aVous avez bien donné &b%{_item}%&a a &b%{_number}% joueur(s)'
+
+  #Broadcast quand on fait /ga givehand
+  #PlaceHolders: %{_item}% pour indiquer l'item donné
+  #PlaceHolders: %{_player}% pour indiquer le joueur qui a donné les items
+  GAHandBroadcast: '&b%{_player}%&a à donné &b%{_item}% &aà tout le monde !'
+
+  #Petit ajout qui sera mis à la place du "%{_stop}%" dans "GACreated", qui indique la façon dont le GiveAll doit être stoppé
+  #PlaceHolders: %{_seconds}% pour indiquer combien de secondes il va durer.
+  GAMustBeStoppedManually: '&aIl ne s''arrêtera que manuellement.' #Ce sera mis à la place du "%{_stop}%" dans la ligne "GACreated"
+  GAWillBeStoppedAutomatically: 'Il s''arrêtera qu''après %{_seconds}%&as.' #Ce sera mis à la place du "%{_stop}%" dans la ligne "GACreated"
+
+  #Message quand on crée un GiveAll
+  #PlaceHolders: %{_stop}% qui renvoie la façon dont le GiveAll va êter stoppé
+  GACreated: '&aGiveAll &b&l%{_ga}%&a créé avec succès ! %{_stop}%'
+
+  #Message quand on supprime un GiveAll
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  GADeleted: '&aVous avez bien supprimé le giveall &b&l%{_ga}%&a !'
+
+  #Message quand on ajoute un item à un GiveAll
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  #PlaceHolders: %{_item}% pour indiquer le nom de l'item que l'on a ajouté
+  ItemAdded: '&aVous avez bien ajouté &bvotre item &aaux items du GiveAll &b%{_ga}% &7&o(item : %{_item}%)'
+
+  #Message quand on renome un GiveAll
+  #PlaceHolders: %{_ga}% pour indiquer l'ancien nom du GiveAll
+  #PlaceHolders: %{_newName}% pour indiquer le nouveau nom du GiveAll
+  RenamedSuccessfully: '&aVous avez bien renommé le GiveAll &b%{_ga}% &aen &b%{_newName}% &a!'
+
+  #Message quand on copy les items d'un GiveAll dans un autre
+  #PlaceHolders: %{_ga1}% pour indiquer le nom du GiveAll dont les items doivent être copié
+  #PlaceHolders: %{_ga2}% pour indiquer le nom du GiveAll où les items vont être copié
+  SuccessfullyCopied: '&aVous avez bien ajouté les items du GiveAll &b%{_ga1}% &adans &b%{_ga2}%&a !'
+
+  #Message quand on clear les items d'un GiveAll
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  SuccessfullyCleared: '&aVous avez bien supprimé les items du GiveAll &b%{_ga}%'
+
+  #Message quand on change la durée d'un GiveAll
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  #PlaceHolders: %{_time}% pour indiquer la durée du GiveAll
+  SuccessfullyChangedTime: '&aVous avez bien changé la durée du GiveAll &b%{_ga}%&a (%{_time}%s)'
+
+  #Message quand on change la durée du compte à rebours d'un GiveAll
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  #PlaceHolders: %{_time}% pour indiquer la durée du compte à rebours d'un GiveAll
+  SuccessfullyChangedCD: '&aVous avez bien changé le compte a rebours du giveall &b%{_ga}% &a(%{_time}%s)'
+
+  #Message ou on doit cliquer pour renommer (MSG), et son infobulle (TTP)
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll à renommer
+  MSGClickForAction: '&aClique-moi !'
+  TTPClickForAction: '&aClique sur ce message !'
+
+  #Message quand le skript reload.
+  Reloading: '&aRechargement...'
+
+  #Message quand le skript a finis de reload.
+  Reloaded: '&aRechargé en %{_time}%s !'
+
+  #Message quand on supprime une condition
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  ConditionDeleted: '&aVous avez bien supprimé la &bcondition&a de give du GiveAll &b%{_ga}%'
+
+  #Message quand on ajoute une condition à un GiveAll
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  #PlaceHolders: %{_cond}% pour indiquer la condition
+  #PlaceHolders: %{_v}% pour indiquer la valeur
+  ConditionSet: '&aVous avez bien changé la &bcondition&a du GiveAll &b%{_ga}%&a à ''&b%{_cond}%'' &aavec comme valeur : &b%{_val}%
+
+  #Message pour voir la condition d'un GiveAll
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  #PlaceHolders: %{_c}% pour indiquer la condition (ex: permission)
+  #PlaceHolders: %{_v}% pour indiquer la valeur (ex: permissionGiveAll.receive)
+  #Rappel: on ne peut pas finir une ligne pas un ":", donc mettez "&r" juste après
+  SeeCondInfo: '&aCondition (pour recevoir des items) du GiveAll &b%{_ga}%&a:&r'
+  SeeCond: '&a    Condition: &b%{_c}%
+  SeeVal: '&a    Valeur: &b%{_v}%
+
+  #Message quand on duplique un GiveAll
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll de référence
+  #PlaceHolders: %{_gaNew}% pour indiquer le nom du nouveau GiveAll
+  SuccessfullyDuplicated: '&aVous avez bien dupliqué le GiveAll &b%{_ga}% ! &aGiveAll créé : &b%{_gaNew}%&a. Vous pouvez le renommer avec /ga rename'
+
+  #Message quand on blacklist un joueur a un Giveall
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  #PlaceHolders: %{_p}% pour indiquer le joueur
+  AddedPlayerToBlacklist: '&aVous avez bien ajouté &b%{_p}%&a à la blacklist du GiveAll &b%{_ga}%'
+
+  #Message quand on blacklist un joueur a un Giveall
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  #PlaceHolders: %{_p}% pour indiquer le joueur
+  RemovedPlayerFromBlacklist: '&aVous avez bien enlevé &b%{_p}% &ade la blacklist du GiveAll &b%{_ga}%'
+
+  #Nom d'un giveall copié
+  DuplicatedGAdefaultName: 'copie'
+
+
+List:
+
+  #Couleur de la virgule et du "et" dans les listes
+  ComaColorInList: '&a'
+  
+  #Couleur des GiveAlls dans les listes
+  GAColorInList: '&b'
+  
+  #Message quand la liste des GiveAlls est vide
+  GAListIsEmpty: '&aIl n'y a aucun giveall !'
+  
+  #Message de la liste des GiveAlls
+  #PlaceHolders: %{_number}% pour indiquer le nombre de GiveAll qu'il y a.
+  GAList: '&aListe des GiveAlls &f&o(%{_number}%) &a:&b'
+
+  #Message de la liste des GiveAlls dont un joueur est blacklist
+  #PlaceHolders: %{_p}% pour indiquer le joueur 
+  BlackListListP: '&aListe des GiveAlls dont &b%{_p}% &aest BlackList :&b'
+
+  #Message de la liste des joueurs blacklist d'un GiveAll
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  BlackListListGA: '&aListe des joueurs blacklist du GiveAll &b%{_ga}% &a:&b'
+
+  #Message quand on veut voir la liste des joueurs blacklist d'un GiveAll, mais qu'il n'y en a pas.
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  NoPlayerBlackListOfThisGA: '&aIl n'y a aucun joueur blacklist de ce GiveAll'
+  
+  #Message quand on veut voir la liste des GiveAlls dont le joueur est blacklist, mais qu'il n'y en a pas.
+  #PlaceHolders: %{_p}% pour indiquer le joueur
+  PlayerIsNotBlacklistFromAnyGiveAll: '&a%{_p}% n'est BlackList d'aucun GiveAll'
+
+GUINames:
+
+  #Nom du GUI de la confirmation de la suppression d'un GiveAll
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  ConfirmDeleteGUI: '&cSupprimer &c&o%{_ga}%'
+
+  #Nom du GUI pour éditer les items d'un GiveAll
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  #PlaceHolders: %{_p}% pour indiquer la page actuelle
+  #PlaceHolders: %{_mp}% pour indiquer le nombre de page total
+  EditItems: '&aItems %{_ga}% &7(&f%{_p}%&7/&f%{_mp}%&7)'
+
+  #Nom du GUI de la liste des GiveAlls
+  #PlaceHolders: %{_p}% pour indiquer la page actuelle
+  #PlaceHolders: %{_mp}% pour indiquer le nombre de page total
+  TitleGUIList: '&aListe &7(page &f%{_p}%&7/&f%{_mp}%&7)'
+
+  #Nom du GUI pour modifier les paramètres d'un GiveAll
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  ModifyGA: '&aGiveAll &b%{_ga}%'
+
+  #Nom du GUI pour modifier la condition d'un GiveALl
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  ModifyConditionGUI: '&aCondition GiveAll &b%{_ga}%'
+
+GUIItems:
+
+  #Nom du livre pour indiquer le nom du GiveAll (dans le GUI de confirmation de suppression et de modification des paramètres)
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  InfoGAName: '&eGiveAll : %{_ga}%'
+
+  #Nom du colorant pour annuler la suppression d'un GiveAll
+  CancelDelete: '&cAnnuler'
+
+  #Nom de la slimebann pour confirmer la suppression d'un GiveAll
+  ConfirmDelete: '&aSupprimer définitivement'
+
+  #Nom du "barrier" pour fermer un GUI
+  CloseGUIItem: '&cQuitter'
+
+  #Nom de la flèche pour retourner au GUI précédent
+  BackItem: '&cRetour'
+
+  #Nom de la feuille pour aller à la page suivante
+  NextPage: '&fPage suivante'
+
+  #Nom de la feuille pour aller à la page précédente
+  PreviousPage: '&fPage précédente'
+
+  #Nom du block en or pour ajouter un item
+  AddItemToGA: '&aAjouter un item'
+
+  #Nom du livre, dans la liste des GiveAlls
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  GAListItem: '&aGiveAll &b%{_ga}%'
+
+  #Lore du livre, dans la liste des GiveAlls
+  #PlaceHolders: %{_action}% pour indiquer ce qui se passe quand on clique sur le GUI ("lancer" ou "arreter")
+  #PlaceHolders: %{_satut}% pour indiquer le statut du GiveAll ("en cours..." ou "arreté")
+  #PlaceHolders: %{_nbitem}% pour indiquer le nombre d'items du GiveAll
+  #PlaceHolders: %{_time}% pour indiquer la durée du GiveAll
+  #PlaceHolders: %{_condition}% pour indiquer la condition de give d'un GiveAll
+  #PlaceHolders: %{_blacklist}% pour indiquer le nombre de joueurs blacklist de ce GiveAll
+  LoreGAList: '||&7&m--------------------||&cClick molette: modifier les items||&cClick droit: supprimer le GiveAll||&cShift click droit: supprimer le GiveAll instantanément||&cClick gauche: &c%{_action}%||&cShift click gauche: modifier le GiveAll||&r||&7&m--------------------||&e&oInformations||&aNombre d''items: &b%{_nbitem}%||&aDurée: &b%{_time}%||&aCompte à rebours: &b%{_cd}%||&aStatut: &b%{_statut}%||&aCondition: &b%{_condition}%||&aJoueurs blacklists: &b%{_blacklist}%'
+
+  #Nom de l'item de décoration, entre les deux boutons
+  #SeveralPageItem: '&e&oA venir: Multi-Pages #L'item entre le boutton 'page suivante' et 'page précédente'. Il sera remplacé dans le futur par le numéro de la page (Update multipage à venir)
+
+  #Nom de l'item entre les bouttons "pages", qui permet d'indiquer la page actuelle
+  #PlaceHolders: %{_p}% pour indiquer la page actuelle
+  #PlaceHolders: %{_mp}% pour indiquer le nombre de page total
+  InfoPageItem: '&ePage Actuelle: &f%{_p}%'
+  LoreInfoPageItem: '&eNombre de pages: &f%{_mp}%'
+
+  #L'action que va executer le click gauche (quand on clique alors qu'il n'est pas lancé) (dans la liste GUI et dans le /ga modify)
+  LeftClickActionStart: '&clancer'
+
+  #Idem que LeftClickActionStart mais quand le GiveAll est vide.
+  LeftClickActionCantStart: '&7&mlancer&7&o (Pas d''item)'
+
+  #L'action que va executer le click gauche (quand on clique alors qu'il est lancé) (dans la liste GUI et dans le /ga modify)
+  LeftClickActionStop: '&carrêter'
+
+  #Le status du GiveAll (quand il est en cours)
+  StatusInProgress: 'En cours...''
+
+  #Le status du GiveAll (quand il est arreté)
+  StatusStop: 'arreté''
+
+  #Item pour clear les items d'un GiveAll (via le GUI EditItems)
+  ClearGA: '&cClear les items du GiveAll'
+
+  #Quand un GiveAll est infini (dans la liste des GiveAll)
+  InifiteTimeForGUIList: 'Infinie'
+
+  #Nom de l'item pour renommer un GiveAll dans le GUI pour modifier les paramètres d'un GiveAll
+  GAModifyRename: '&eRenommer'
+
+  #Nom de l'item pour modifier les items d'un Giveall, dans le GUI pour modifier les paramètres d'un GiveAll
+  GAEditItems: '&eModifier les items'
+
+  #Nom de l'item pour supprimer le GiveAll dans le GUi "modify"
+  DeleteInModifyGUI: '&cSupprimer'
+
+  #Items pour modifier la durée d'un GiveAll dans le GUI "modify"
+  AddTimeByGUI: '&aAjouter %{_time}%&as à la durée du GiveAll'
+  RemoveTimeByGUI: '&cEnlever %{_time}%&cs à la durée du GiveAll'
+  SeeTimeByGUI: '&aDurée du GiveAll : &b%{_time}%&as'
+  LoreSeeTimeByGUI: '&r||&b0 &a= Infini||&7Click droit: réinitialiser le temps'
+
+  #Items pour modifier la durée d'un compte a rebours dans le GUI "modify"
+  AddCDByGUI: '&aAjouter %{_time}%&as à la durée du compte à rebours'
+  RemoveCDByGUI: '&cEnlever %{_time}%&cs à la durée du compte à rebours'
+  SeeCDByGUI: '&aDurée du compte à rebours : &b%{_time}%&as'
+  LoreSeeCDByGUI: '||&7Click droit: réinitialiser le compte à rebours'
+
+  #Item pour modifier la condition d'un GiveAll
+  ModifyCondition: '&aModifier la condition'
+
+  #Item pour définir la condition du GiveAll à une permission
+  GAModifCondPermItem: '&aDéfinir une &bpermission'
+
+  #Item pour définir la condition du GiveAll à un message qui contient une certaine valeur
+  GAModifCondMSGCItem: '&aDéfinir un &bmessage qui contient &aune valeur'
+
+  #Item pour définir la condition du GiveAll à un message qui est pareil qu'une certaine valeur
+  GAModifCondMSGSItem: '&aDéfinir un &bmessage qui est &aune valeur'
+
+  #Item pour définir la condition du GiveAll à un nombre de kill minimum
+  GAModifCondMinKill: '&aDéfinir un &bnombre de kill minimum'
+
+  #Item pour définir la condition du GiveAll à un nombre de kill maximum
+  GAModifCondMaxKill: '&aDéfinir un &bnombre de kill maximum'
+
+  #Item pour définir la condition du GiveAll à un nombre de kill minimum
+  GAModifCondMinDeath: '&aDéfinir un &bnombre de mort minimum'
+
+  #Item pour définir la condition du GiveAll à un nombre de kill maximum
+  GAModifCondMaxDeath: '&aDéfinir un &bnombre de mort maximum'
+
+  #Item pour définir la condition du GiveAll à un nombre d'argent minimum
+  GAModifCondMinMoney: '&aDéfinir un &bsolde minimum'
+
+  #Item pour définir la condition du GiveAll à un nombre d'argent maximum
+  GAModifCondMaxMoney: '&aDéfinir un &bsolde maximum'
+
+  #Item pour définir la condition du GiveAll à un temps de connexion minimum
+  #GAModifCondMinPlayTime: '&aDéfinir un &btemps de connexion minimum'
+
+  #Item pour définir la condition du GiveAll à un temps de connexion maximum
+  #GAModifCondMaxPlayTime: '&aDéfinir un &btemps de connexion maximum'
+
+  #Item pour définir la condition du GiveAll à "être dans une région"
+  GAModifCondInRegion: '&aDéfinir une &brégion&a dans laquelle il faut être'
+
+  #Item pour définir la condition du GiveAll à "ne pas être dans une région"
+  GAModifCondNotInRegion: '&aDéfinir une &brégion&a dans laquelle il ne faut pas être'
+
+  #Item pour définir la condition du GiveAll à "être dans un monde"
+  GAModifCondInWorld: '&aDéfinir une &bmonde&a dans lequel il faut être'
+
+  #Item pour définir la condition du GiveAll à "ne pas être dans un monde"
+  GAModifCondNotInWorld: '&aDéfinir un &bmonde&a dans lequel il ne faut pas être'
+
+  #Item pour supprimer la condition d'un GiveAll
+  GAClearCondItem: '&cSupprimer la condition'
+
+  #Lore de l'item d'information, dans le GUI pour changer la condition
+  InfoConditionModify: '&aCondition actuelle :&r'
+
+  #Information sur la région dans laquelle on se trouve (lore de l'item qui sert à définir la condition "etre" ou "ne pas être" dans une région)
+  #PlaceHolders: %{_rg}% pour indiquer la région dans laquelle on se trouve
+  RegionInfo: '&aRégion où vous êtes: &b%{_rg}%'
+
+MessageYML:
+  version: 1.0
