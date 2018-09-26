@@ -16,7 +16,7 @@
 # Si ca ne fonctionne toujours pas:
 - contactez-moi par skript-mc de cette facon:
 
-"""
+```
 Ma version skript:
 Ma version de minecraft:
 Ma version de Java:
@@ -25,7 +25,7 @@ J'ai (pas) MassiveCore
 Si il y a une erreur IG: envoyer un screen
 Si il y a une erreur Console: envoyer un screen
 Si il n'y a pas d'erreurs ni IG ni console, décrire ce qui ne se passe pas correctement
-"""
+```
 
 
-#Merci d'avoir téléchargé GiveAll !
+# Merci d'avoir téléchargé GiveAll !
