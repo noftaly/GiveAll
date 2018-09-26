@@ -277,6 +277,13 @@ Messages:
   #Nom d''un giveall copié
   DuplicatedGAdefaultName: 'copie'
 
+  #Message quand un joueur ajoute/retire quelqu'un de la blacklist d'un GiveAll
+  #DoNotifyVictimOnBlacklist et DoNotifyVictimOnUnBlacklist doivent être sur "true" pour que les messages s'envoient
+  #PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+  #PlaceHolders: %{_p}% pour indiquer la personne qui a blacklist/unblacklist
+  NotifyVictimOnBlacklist: &cVous avez été blacklist par %{_e}% du GiveAll %{_ga}%
+  NotifyVictimOnUnblacklist: &aVous avez été retiré de la blacklist du GiveAll %{_ga}% par %{_e}%
+
   #-----------------------------------------------------#
   #         Configuration des listes          #
   #-----------------------------------------------------#
