@@ -14,12 +14,14 @@
 - Vous utilisez bien Spigot ?
 
 # Si ca ne fonctionne toujours pas:
-- contactez-moi par skript-mc de cette facon:
+- contactez-moi par skript-mc (noftaly) ou par discord (noftaly#0359) de cette facon:
 
 ```
 Ma version skript:
+Ma version de GiveAll:
 Ma version de minecraft:
 Ma version de Java:
+Voici tous mes addons et leurs versions: (liste des addons et leur versions)
 J'utilise Bukkit/Spigot
 J'ai (pas) MassiveCore
 Si il y a une erreur IG: envoyer un screen
