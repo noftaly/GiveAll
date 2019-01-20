@@ -1,7 +1,7 @@
 # **GiveAll**
 
 ## Vous avez un problème avec le skript ?
-Alors verifiez par vous même d'où viens l'erreur
+Alors verifiez par vous même d'où viens l'erreur.
 Puis si et seulement si vous avez essayé et que vous n'y arrivez pas, alors contactez-moi par MP skript mc ou discord (noftaly#0359)
 
 ## Vérifier son erreur
