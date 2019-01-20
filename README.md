@@ -1,10 +1,10 @@
 # **GiveAll**
 
-# Vous avez un problème avec le skript ?
+## Vous avez un problème avec le skript ?
 -> Alors verifiez par vous même d'où viens l'erreur
 -> Puis si et seulement si vous avez essayé et que vous n'y arrivez pas, alors contactez-moi par MP skript mc ou discord (noftaly#0359)
 
-# Vérifier son erreur
+## Vérifier son erreur
 - Avez-vous Java 8 ?
 - Avez vous Skript 2.3.1+ ? (a vérifier avec le /ver skript)
 - Avez vous les addons requis ? (voir sur la page de la ressource)
@@ -13,7 +13,7 @@
 - Vous n'avez pas Umbaska ? SkRambled ? RandomSK ? SkAction ? Si oui, désinstallez-les, ils sont tous bugués
 - Vous utilisez bien Spigot ou PaperSpigot ?
 
-# Si ca ne fonctionne toujours pas:
+## Si ca ne fonctionne toujours pas:
 - contactez-moi par skript-mc (noftaly) ou par discord (noftaly#0359) de cette facon:
 
 ```
@@ -29,4 +29,4 @@ Si il n'y a pas d'erreurs ni IG ni console, décrire ce qui ne se passe pas corr
 ```
 
 
-# Merci d'avoir téléchargé GiveAll !
+## Merci d'avoir téléchargé GiveAll !
