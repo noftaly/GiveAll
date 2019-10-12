@@ -1,0 +1,2578 @@
+# Informations
+#
+# Testé avec:
+#	- Paper-Spigot 1.13.2 #504
+#	- Java 8
+#	- Skript 2.3.1, 2.3.2 et 2.3.5
+#	- TuSKe 1.8.2-pikachu-patch-3
+#	- SkQuery-Lime 3.6.2-Lime et SkQuery-Lime 3.6.3
+#	- PlayTime 2.1.3
+#	- Worldguard-legacy-7.0.0-beta-02
+#	- Vault 1.7.1
+#
+# Prérequis:
+#	- (Paper)Spigot
+#	- Java 8
+#	- Skript 2.3.1 minimum
+#	- TuSKe 1.8.2-pikachu-patch-3 minimum
+#	- SkQuery-Lime (3.6.1 si 1.12-, 3.6.2+ si 1.13+)
+#	(- PlayTime 2.1.3)
+#	(- WorldGuard 6+)
+#	(- Vault)
+#	- ! Ne fonctionne pas avec Skript 2.3.0 ou moins !
+#
+# Vous etes en version : v2.0-beta5
+#
+# Lien du script: https://bit.ly/2tLQ1nR
+#
+# Vous n'avez pas le droit de revendre, ou de reposter ce skript sans ma permission.
+# Vous ne pouvez pas vous approprier le script entier.
+#
+# Si vous voulez faire une vidéo de présentation, c'est super !
+# Mais n'oubliez pas de mettre le lien de téléchargement en description, de me citer (et de me l'envoyer pour que je l'ajoute au poste).
+# Si vous voulez m'aider à !traduire le script!#, contactez moi par discord noftaly#0359 !
+#
+# Merci beaucoup d'avoir téléchargé GiveAll, développé par ~noftaly
+#
+#! /!\ IMPORTANT /!\ Si vous avez déjà un plugin/script de GiveAll d'installé, désactivez-le ou supprimez-le pour éviter les conflits !# (Surtout au niveau des commandes)
+
+# Beta-5 :
+#	- J'avais oublié de l'ajouter dans le changelog de la bêta 4 : Correctif des play sound qui ne fonctionnaient pas et donnaient une erreur console
+#	- Suppression du paramètre "-i" dans le /ga start. Pour le lancer instantanément, il faut maintenant simplement faire cd:0
+#	- Modification des tooltips du /ga start et du /ga create dans le /ga help
+#	- Ajout de la vérification de l'existance du GiveAll, dans le /ga start
+#	- Légère optimisation de certaines conditions
+#	- Correctif d'un bug qui lançait une erreur dans la console, et envoyait un message du type "an error occured while..." quand on mettait du texte au lieu du numéro d'une page dans certaines commandes
+#	- Ajout du statut "Lancement..." (correspond au compte à rebours) dans les guis
+#	- Correctif de l'inversion de "drop" et "give" dans le message de validation quand on change le droptype
+#	- Correction d'une coquille dans le nom d'une option
+
+# Todo:
+#	- (Beta-5) Bug : quand on lance un GA, puis qu'on l'arrête durant le cd, puis qu'on le relance, il se lance 2 fois : 1 normalement, 1 depuis la où il s'était arrété
+#	- (Beta-5) Ajouter le /ga info <nom> pour donner toutes les infos sur un GA, sans avoir a les chercher dans le /ga list gui
+#	- (Beta-6) Lancer/arrêter des groupes
+#	- (Beta-6) Pouvoir executer /ga depuis la console
+#	- (Plus tard) Traduire le script
+
+options:
+	#-----------------------------------------------------#
+	# 						Prefix 						  #
+	#-----------------------------------------------------#
+	Prefix: &7[&2GiveAll&7]&r
+	ErrorPrefix: &cErreur :&c
+
+	#-----------------------------------------------------#
+	# 					Messages d'erreur 				  #
+	#-----------------------------------------------------#
+	# Mesage quand on a pas la permission de faire la commande. Aucun préfix n'est mis avant le message, alors il faut le mettre manuellement :)
+	NoPermission: &7[&2GiveAll&7] &cErreur : Vous n'avez pas la permission de faire cela
+
+	# Message quand le GiveAll que l'on a marqué n'existe pas
+	GADoesntExist: &cCe GiveAll n'existe pas !
+
+	# Message quand le groupe que l'on a marqué n'existe pas
+	GrpDoesntExist: &cCe groupe n'existe pas 
+
+	# Message quand le GiveAll que l'on a marqué existe déjà
+	GaAlreadyExists: &cCe GiveAll existe déjà !
+
+	# Message quand le groupe que l'on a marqué existe déjà
+	GroupAlreadyExists: &cCe groupe existe déjà !
+
+	# Message quand le giveall que l'on veut ajouter au groupe est déjà dedans
+	GrpAlreadyContainsGa: &cCe groupe contient déjà ce giveall.
+
+	# Message quand le giveall que l'on veut enlevé d'un groupe n'est pas dedans
+	GrpDoesntContainsGa: &cCe groupe ne contient pas ce giveall.
+
+	# Message quand on fait /ga grp info mais que le groupe ne contient aucun giveall
+	GroupContainsNoGiveAlls: &cCe groupe ne contient aucun giveall.
+
+	# Message quand on veut faire une action alors que le GiveAll est vide (lancer/copier)
+	GAIsEmpty: &cImpossible de faire cela : ce GiveAll n'a pas d'item !
+
+	# Message quand on veut lancer un GiveAll alors qu'il y en a déjà un en cours
+	GAIsAlreadyStarted: &cCe GiveAll est déjà en cours !
+
+	# Message quand veut arreter un GiveAll alors qu'il n'est pas en cours
+	NoGAInProgress: &cCe GiveAll n'est pas en cours.
+
+	# Message quand on veut ajouter/donner un item alors que l'on a rien en main
+	TakeAnItem: &cVeuillez prendre un item dans votre main !
+
+	# Message quand veut donner un item a tout le monde alors que personne n'est connecté
+	Alone: &cPersonne n'est connecté.
+
+	# Message quand veut supprimer/renommer un GiveAll alors qu'il est en cours
+	CantModifyBecauseGAIsInProgress: &cImpossible de faire cette action : ce giveall est en cours !
+
+	# Message quand un joueur veut renomer un GiveAll avec un nom déjà pris
+	NewGAAlreadyExists: &cLe nom %{_newName}% est déjà utilisé !
+
+	# Message quand on veut entrer un nombre plus petit que 10
+	TimeForCDIsTooSmall: &cVeuillez entrer un nombre plus grand ou égal à 10 !
+
+	# Message quand on veut entrer un nombre plus petit que 0 ou qui n'est pas entier
+	TimeIsInvalid: &cVeuillez entrer un &nnombre entier &cplus grand ou égal à 0 !
+
+	# Message quand on veut supprimer/voir les conditions d'un GiveAll alors qu'il n'en a pas
+	NoConditionToClear: &cCe GiveAll n'a pas de condition !
+
+	# Message quand on mets autre chose qu'un nombre
+	InvalidNumber: &cNombre invalide ! Assurez-vous d'avoir mis un nombre entier.
+
+	# Message quand on veut ajouter un joueur a la blacklist d'un GiveAll alors qu'il y est déjà
+	# PlaceHolders: %{_p}% pour indiquer le joueur
+	# PlaceHolders: %{_ga}% pour indiquer le giveall sur lequel le joueur est blacklist
+	PlayerAlreadyBlacklist: &cCe joueur est déjà sur la blacklist de ce GiveAll
+
+	# Message quand on veut enlever un joueur de la blacklist d'un GiveAll alors qu'il n'y est pas
+	# PlaceHolders: %{_p}% pour indiquer le joueur
+	# PlaceHolders: %{_ga}% pour indiquer le giveall sur lequel le joueur est blacklist
+	PlayerNoBlacklist: &cCe joueur n'est pas sur la blacklist de ce GiveAll
+
+	# Message d'erreur quand on veut ajouter à/enlever de la blacklist un joueur mais qu'on entre un pseudo qui n'existe pas
+	# PlaceHolders: %{_p}% pour indiquer le joueur
+	InvalidPlayer: &c%{_p}% ne s'est jamais connecté ou n'est pas un joueur !
+
+	# Message d'erreur quand on veut blacklist un joueur alors qu'il est exempté
+	# PlaceHolders: %{_p}% pour indiquer le joueur
+	PlayerIsExemptedOfBlacklist: &cCe joueur est exempté des blacklists !
+
+	#-----------------------------------------------------#
+	# 			Messages d'erreur de syntaxe 			  #
+	#-----------------------------------------------------#
+
+	# Message quand on se trompe dans la syntaxe du /ga start.
+	WrongCommandSyntax_Start: &c/giveall start <nom> [instant]
+
+	# Message quand on se trompe dans la syntaxe du /ga stop.
+	WrongCommandSyntax_Stop: &c/giveall stop <nom>
+
+	# Message quand on se trompe dans la syntaxe du /ga create.
+	WrongCommandSyntax_Create: &c/giveall create <nom> [temps (en seconde)]
+	
+	# Message quand on se trompe dans la syntaxe du /ga group create.
+	WrongCommandSyntax_CreateGroup: &c/giveall group create <nom>
+
+	# Message quand on se trompe dans la syntaxe du /ga group add.
+	WrongCommandSyntax_AddGaToGroup: &c/giveall group add <nom> <giveall>
+
+	# Message quand on se trompe dans la syntaxe du /ga delete.
+	WrongCommandSyntax_Delete: &c/giveall delete <nom>
+
+	# Message quand on se trompe dans la syntaxe du /ga group delete.
+	WrongCommandSyntax_DeleteGroup: &c/giveall group delete <nom>
+
+	# Message quand on se trompe dans la syntaxe du /ga group info.
+	WrongCommandSyntax_GroupInfo: &c/giveall group info <nom>
+
+	# Message quand on se trompe dans la syntaxe du /ga add.
+	WrongCommandSyntax_Add: &c/giveall add <nom>
+
+	# Message quand on se trompe dans la syntaxe du /ga edit.
+	WrongCommandSyntax_EditItem: &c/giveall edit[item] <nom>
+
+	# Message quand on se trompe dans la syntaxe du /ga info.
+	WrongCommandSyntax_Info: &c/giveall info[rmation][s] <nom>
+
+	# Message quand on se trompe dans la syntaxe du /ga rename.
+	WrongCommandSyntax_Rename: &c/giveall rename <ancien nom> <nouveau nom>
+
+	# Message quand on se trompe dans la syntaxe du /ga copy.
+	WrongCommandSyntax_CopyContent: &c/giveall copy <GiveAll d'import> <GiveAll d'export>
+
+	# Message quand on se trompe dans la syntaxe du /ga clear.
+	WrongCommandSyntax_Clear: &c/giveall clear <nom>
+
+	# Message quand on se trompe dans la syntaxe du /ga group clear.
+	WrongCommandSyntax_ClearGroup: &c/giveall group clear <nom>
+
+	# Message quand on se trompe dans la syntaxe du /ga changetime.
+	WrongCommandSyntax_ChangeTime: &c/giveall changetime <nom> <temps (en seconde)>
+
+	# Message quand on se trompe dans la syntaxe du /ga modify.
+	WrongCommandSyntax_Modify: &c/giveall modify <nom>
+
+	# Message quand on se trompe dans la syntaxe du /ga countdown.
+	WrongCommandSyntax_ChangeCD: &c/giveall setcountdown <nom> <temps (en seconde)>
+
+	# Message quand on se trompe dans la syntaxe du /ga condition.
+	WrongCommandSyntax_Condition: &c/giveall condition <see/set/remove> <nom> [condition] [valeur]
+
+	# Message quand on fait /ga cond set <nom> <condition> mais qu'on se trompe dans la condition
+	WrongCondition: &cCondition invalide ! Liste : 'msg-same', 'msg-contain', 'perm', 'min-kill', 'max-kill', 'min-death', 'max-death', 'min-money', 'max-money', 'min-co', 'max-co', 'in-region', 'not-in-region', 'in-world', 'not-in-world', 'min-ratio', 'max-ratio'.
+
+	# Message d'information quand on fait /ga condition remove	
+	RemoveConditionInfo: &c/giveall condition remove <nom> all » pour supprimer toutes les conditions.
+
+	# Message quand on se trompe dans la syntaxe du /ga duplicate.
+	WrongCommandSyntax_Duplicate: &c/giveall duplicate <nom>
+
+	# Message quand on se trompe dans la syntaxe du /ga blacklist.
+	WrongCommandSyntax_Blacklist: &c/giveall blacklist add/remove/info
+
+	# Message quand on se trompe dans la syntaxe du /ga blacklist add.
+	WrongCommandSyntax_BlacklistAdd: &c/giveall blacklist add <joueur> <giveall>
+
+	# Message quand on se trompe dans la syntaxe du /ga blacklist remove.
+	WrongCommandSyntax_BlacklistRemove: &c/giveall blacklist remove <joueur> <giveall>
+
+	# Message quand on se trompe dans la syntaxe du /ga blacklist info.
+	WrongCommandSyntax_BlacklistInfo: &c/giveall blacklist info <player/giveall> <valeur>
+
+	# Message quand on se trompe dans la syntaxe du /ga blacklist list.
+	WrongCommandSyntax_BlacklistList: &c/giveall blacklist list <giveall>
+
+	# Message quand on se trompe dans la syntaxe du /ga drop
+	WrongCommandSyntax_DropType: &c/giveall drop[type] <giveall> <give/drop>
+
+	# Nom/Lore des items quand aucune condition n'est mise (apparait dans la liste en gui, et dans le menu pour modifier la condition)
+	NoConditionSet: &cAucune condition
+
+	#-----------------------------------------------------#
+	# 						Messages 					  #
+	#-----------------------------------------------------#
+
+	# Message du compte à rebours, lors du lancement d'un GiveAll.
+	# PlaceHolders: %{_tl}% pour indiquer le temps restant
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	GAStartsInXSeconds: &aLe GiveAll &3%{_ga}% &acommence dans &2%{_tl}% &aseconde(s) !
+
+	# Message quand le GiveAll commence
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	GAStarts: &aLe GiveAll commence ! &3&o(GiveAll: %{_ga}%)
+
+	# Message quand le GiveAll se finit
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	GAIsFinish: &aGiveAll %{_ga}% fini ! Merci d'avoir participé !
+
+	# Message quand le GiveAll est arreté
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	GAHasBeenStopped: &aLe GiveAll &2%{_ga}%&a a été arreté !
+
+	# Message quand on fait /ga givehand
+	# PlaceHolders: %{_item}% pour indiquer l'item donné
+	# PlaceHolders: %{_number}% pour indiquer à combien de joeur on l'a donné
+	GAHandHasBeenGiven: &aVous avez bien donné &2%{_item}%&a à &2%{_number}% joueur(s)
+
+	# Broadcast quand on fait /ga givehand
+	# PlaceHolders: %{_item}% pour indiquer l'item donné
+	# PlaceHolders: %{_player}% pour indiquer le joueur qui a donné les items
+	GAHandBroadcast: &2%{_player}%&a à donné &2%{_item}% &aà tout le monde !
+
+	# Messages quand on crée un GiveAll
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	# PlaceHolders: %{_time}% pour indiquer la durée du GiveAll
+	# PlaceHolders: %{_cd}% pour indiquer la durée du compte à rebours du GiveAll
+	GACreated: &aGiveAll &2&l%{_ga}%&a créé avec succès !
+	GACreationInfosTime: &a    Durée : &2%{_time}%
+	GACreationInfosCD: &a    Compte à rebours : &2%{_cd}%
+
+	# Message quand on crée un GiveAll
+	# PlaceHolders: %{_grp}% qui indique le nom du groupe
+	GroupCreated: &aGroupe &2&l%{_grp}%&a créé avec succès !
+
+	# Message quand on ajoute un GiveAll dans un groupe
+	# PlaceHolders: %{_grp}% qui indique le nom du groupe
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	SuccessfullyAddedGaToGroup: &aVous avez bien ajouté le giveall &2%{_ga}%&a au groupe &2%{_grp}% &a!
+
+	# Message quand on supprime un GiveAll
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	GADeleted: &aVous avez bien supprimé le giveall &2&l%{_ga}%&a !
+
+	# Message quand on ajoute un GiveAll dans un groupe
+	# PlaceHolders: %{_grp}% qui indique le nom du groupe
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	SuccessfullyRemovedGaFromGroup: &aVous avez bien enlevé le giveall &2%{_ga}%&a du groupe &2%{_grp}% &a!
+
+	# Message quand on supprime un groupe
+	# PlaceHolders: %{_grp}% pour indiquer le nom du groupe
+	GrpDeleted: &aVous avez bien supprimé le groupe &2&l%{_grp}%&a !
+
+	# Message quand on ajoute un item à un GiveAll
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	# PlaceHolders: %{_item}% pour indiquer le nom de l'item que l'on a ajouté
+	ItemAdded: &aVous avez bien ajouté &2votre item &aaux items du GiveAll &2%{_ga}% &7&o(item : %{_item}%)
+
+	# Message quand on renome un GiveAll
+	# PlaceHolders: %{_ga}% pour indiquer l'ancien nom du GiveAll
+	# PlaceHolders: %{_newName}% pour indiquer le nouveau nom du GiveAll
+	RenamedSuccessfully: &aVous avez bien renommé le GiveAll &2%{_ga}% &aen &2%{_newName}% &a!
+
+	# Message quand on copy les items d'un GiveAll dans un autre
+	# PlaceHolders: %{_ga1}% pour indiquer le nom du GiveAll dont les items doivent être copié
+	# PlaceHolders: %{_ga2}% pour indiquer le nom du GiveAll où les items vont être copié
+	SuccessfullyCopied: &aVous avez bien ajouté les items du GiveAll &2%{_ga1}% &adans &2%{_ga2}%&a !
+
+	# Message quand on clear les items d'un GiveAll
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	SuccessfullyCleared: &aVous avez bien supprimé les items du GiveAll &2%{_ga}%
+
+	# Message quand on clear les items d'un GiveAll
+	# PlaceHolders: %{_grp}% pour indiquer le nom du groupe
+	SuccessfullyClearedGroup: &aVous avez bien enlevé les givealls du groupe &2%{_grp}%
+
+	# Message quand on change la durée d'un GiveAll
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	# PlaceHolders: %{_time}% pour indiquer la durée du GiveAll
+	SuccessfullyChangedTime: &aVous avez bien changé la durée du GiveAll &2%{_ga}%&a à &2%{_time}%&as
+
+	# Message quand on change la durée du compte à rebours d'un GiveAll
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	# PlaceHolders: %{_time}% pour indiquer la durée du compte à rebours d'un GiveAll
+	SuccessfullyChangedCD: &aVous avez bien changé le compte a rebours du giveall &2%{_ga}% &a à &2%{_time}%&as
+
+	# Message ou on doit cliquer pour renommer (MSG), et son infobulle (TTP)
+	MSGClickForAction: &aClique-moi !
+	TTPClickForAction: &aClique sur ce message !
+
+	# Message quand le skript reload.
+	Reloading: &aRechargement...
+
+	# Message quand le skript a finis de reload.
+	Reloaded: &aRechargé en %{_time}% !
+
+	# Message quand on ajoute une condition à un GiveAll
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	# PlaceHolders: %{_cond}% pour indiquer la condition
+	# PlaceHolders: %{_val}% pour indiquer la valeur
+	ConditionSet: &aVous avez bien ajouté la condition &2%{_cond}%&a au GiveAll &2%{_ga}%&a avec comme valeur : &2%{_val}%
+	
+	# Message quand on enlève une condition à un GiveAll
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	# PlaceHolders: %{_cond}% pour indiquer la condition
+	ConditionUnset: &aVous avez bien enlevé la condition &2%{_cond}%&a du GiveAll &2%{_ga}%&a !
+	
+	# Message quand on ajoute une condition à un GiveAll
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	ConditionCleared: &aVous avez bien supprimé &2toutes les conditions &adu GiveAll &2%{_ga}%&a !
+
+	# Messages pour voir la condition d'un GiveAll
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	# PlaceHolders: %{_c}% pour indiquer la condition (ex: permission)
+	# PlaceHolders: %{_v}% pour indiquer la valeur (ex: permissionGiveAll.receive)
+	# PlaceHolders: %{_d}% pour indiquer la description de la condition
+	# Rappel: on ne peut pas finir une ligne pas un ":", donc mettez "&r" juste après
+	SeeCondInfo: &aCondition(s) (pour recevoir des items) du GiveAll &2%{_ga}%&a:&r
+	SeeCond: &2➥ &aCondition : &b%{_c}% &7︳ &aValeur : &b%{_v}%
+	SeeCondTooltip: &a%{_d}%
+
+	# Message quand on change le mode de drop d'un giveall
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll de référence
+	# PlaceHolders: %{_drop}% pour indiquer le type de drop définit
+	SuccessfullyChangedDropType: &aVous avez bien définit le type de drop du GiveAll &2%{_ga}% &aa &2%{_drop}%&a.
+
+	# Message quand on duplique un GiveAll
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll de référence
+	# PlaceHolders: %{_gaNew}% pour indiquer le nom du nouveau GiveAll
+	SuccessfullyDuplicated: &aVous avez bien dupliqué le GiveAll &2%{_ga}% ! &aGiveAll créé : &2%{_gaNew}%&a. Vous pouvez le renommer avec /ga rename
+
+	# Message quand on blacklist un joueur a un Giveall
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	# PlaceHolders: %{_p}% pour indiquer le joueur
+	AddedPlayerToBlacklist: &aVous avez bien ajouté &2%{_p}%&a à la blacklist du GiveAll &2%{_ga}%
+
+	# Message quand on blacklist un joueur a un Giveall
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	# PlaceHolders: %{_p}% pour indiquer le joueur
+	RemovedPlayerFromBlacklist: &aVous avez bien enlevé &2%{_p}% &ade la blacklist du GiveAll &2%{_ga}%
+
+	# Nom d'un giveall copié
+	DuplicatedGAdefaultName: copie
+
+	# Message de confirmation de la purge des GiveAlls.
+	# PlaceHolders : %{_total}% pour indiquer le nombre total de GiveAll qui sera supprimé
+	PleaseConfirmPurge: &aEtes-vous sûr de &2supprimer tous les GiveAlls &a? Cela en supprimera &2%{_total}%&a.
+
+	# Message quand on a fait une purge des GiveAlls
+	# PlaceHolders : %{_total}% pour indiquer le nombre total de GiveAll qui a été supprimé
+	SuccessfullyPurged: &aVous avez bien supprimé &2%{_total}% GiveAlls&a.
+
+	# Message de confirmation de la purge des groupes.
+	# PlaceHolders : %{_total}% pour indiquer le nombre total de groupe qui sera supprimé
+	PleaseConfirmPurgeGroup: &aEtes-vous sûr de &2supprimer tous les groupes &a? Cela en supprimera &2%{_total}%&a.
+
+	# Message quand on a fait une purge des groupes
+	# PlaceHolders : %{_total}% pour indiquer le nombre total de groupe qui a été supprimé
+	SuccessfullyPurgedGroup: &aVous avez bien supprimé &2%{_total}% groupes&a.
+
+	# Message quand on veut regarder le type de drop d'un giveall
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	# PlaceHolders: %{_drop}% pour indiquer le type de drop
+	DropTypeInfo: &aLe type de drop du giveall &2%{_ga}% &aest '&2%{_drop}%&a'.
+
+	# Message en haut lorsque l'on fait /ga info
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	InfoHeader: &aInformations du giveall &2%{_ga}%&a :&r
+
+	#-----------------------------------------------------#
+	# 			  Configuration des listes 				  #
+	#-----------------------------------------------------#
+	# Couleur de la virgule et du "et" dans les listes
+	ComaColorInList: &a
+	
+	# Couleur des GiveAlls dans les listes
+	GAColorInList: &2
+
+	# Couleur des GiveAlls dans les listes s'il est en cours
+	GAColorInListIfInProgress: &n
+	
+	# Message quand la liste des GiveAlls est vide. Est aussi utilisé quand on veut faire une purge mais qu'il n'y a aucun GiveAll
+	GAListIsEmpty: &aIl n'y a aucun giveall !
+	
+	# Message quand la liste des groupes est vide. Est aussi utilisé quand on veut faire une purge mais qu'il n'y a aucun groupe
+	GroupListIsEmpty: &aIl n'y a aucun groupe !
+
+	# Message de la liste des GiveAlls
+	# PlaceHolders: %{_number}% pour indiquer le nombre de GiveAll qu'il y a.
+	GAList: &aListe des GiveAlls &f&o(%{_number}%) &a:&2
+
+	# Message de la liste des groupes
+	# PlaceHolders: %{_number}% pour indiquer le nombre de groupes qu'il y a.
+	GroupList: &aListe des groupes &f&o(%{_number}%) &a:&2
+
+	# Message de la liste des groupes
+	# PlaceHolders: %{_number}% pour indiquer le nombre de givealls qu'il y a.
+	# PlaceHolders: %{_grp}% pour indiquer le nombre du groupe
+	GroupInfo: &aListe des givealls du groupe %{_grp}% &f&o(%{_number}%) &a:&2
+
+	# Message de la liste des GiveAlls dont un joueur est blacklist
+	# PlaceHolders: %{_p}% pour indiquer le joueur	
+	BlackListListP: &aListe des GiveAlls dont &2%{_p}% &aest BlackList :&2
+
+	# Message de la liste des joueurs blacklist d'un GiveAll
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	BlackListListGA: &aListe des joueurs blacklist du GiveAll &2%{_ga}% &a:&2
+
+	# Message quand on veut voir la liste des joueurs blacklist d'un GiveAll, mais qu'il n'y en a pas.
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	NoPlayerBlackListOfThisGA: &aIl n'y a aucun joueur blacklist de ce GiveAll
+	
+	# Message quand on veut voir la liste des GiveAlls dont le joueur est blacklist, mais qu'il n'y en a pas.
+	# PlaceHolders: %{_p}% pour indiquer le joueur
+	PlayerIsNotBlacklistFromAnyGiveAll: &a%{_p}% n'est BlackList d'aucun GiveAll
+
+	# Message de la liste des conditions
+	# PlaceHolders: %{_number}% pour indiquer le nombre de conditions qu'il y a.
+	ConditionsList: &aListe des conditions &f&o(%{_number}%) &a:&2
+
+	#-----------------------------------------------------#
+	# 					Nom des GUIs 					  #
+	#-----------------------------------------------------#
+	# Nom du GUI de la confirmation de la suppression d'un GiveAll/d'un groupe
+	# PlaceHolders: %{_e}% pour indiquer le nom de l'élément (giveall/groupe)
+	ConfirmDeleteGUI: &cSupprimer &c&o%{_e}%
+
+	# Nom du GUI pour éditer les items d'un GiveAll
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	# PlaceHolders: %{_p}% pour indiquer la page actuelle
+	# PlaceHolders: %{_mp}% pour indiquer le nombre de page total
+	EditItems: &aItems %{_ga}% &7(&f%{_p}%&c/&f%{_mp}%&7)
+
+	# Nom du GUI de la liste des GiveAlls
+	# PlaceHolders: %{_p}% pour indiquer la page actuelle
+	# PlaceHolders: %{_mp}% pour indiquer le nombre de page total
+	TitleGUIList: &aListe &7(page &f%{_p}%&7/&f%{_mp}%&7)
+
+	# Nom du GUI du /ga group info <groupe> gui
+	# PlaceHolders: %{_grp}% pour indiquer le nom du groupe
+	# PlaceHolders: %{_p}% pour indiquer la page actuelle
+	# PlaceHolders: %{_mp}% pour indiquer le nombre de page total
+	TitleGroupListGui: &aGroupe &2%{_grp}% &f(%{_p}%/%{_mp}%)
+
+	# Nom du GUI pour modifier les paramètres d'un GiveAll
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	ModifyGA: &aGiveAll &2%{_ga}%
+
+	# Nom du GUI pour modifier la condition d'un GiveALl
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	ModifyConditionGUI: &aCondition GiveAll &2%{_ga}%
+
+	#-----------------------------------------------------#
+	# 				Nom des Items des GUIs 				  #
+	#-----------------------------------------------------#
+	# Nom du livre pour indiquer le nom du GiveAll (dans le GUI de confirmation de suppression et de modification des paramètres)
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	InfoGAName: &eGiveAll : %{_ga}%
+
+	# Nom du colorant pour annuler la suppression d'un GiveAll
+	CancelDelete: &cAnnuler
+
+	# Nom de la slimebann pour confirmer la suppression d'un GiveAll
+	ConfirmDelete: &aSupprimer définitivement
+
+	# Nom du "barrier" pour fermer un GUI
+	CloseGUIItem: &cQuitter
+
+	# Nom de la flèche pour retourner au GUI précédent
+	BackItem: &cRetour
+
+	# Nom de la feuille pour aller à la page suivante
+	NextPage: &fPage suivante
+
+	# Nom de la feuille pour aller à la page précédente
+	PreviousPage: &fPage précédente
+
+	# Nom du block en or pour ajouter un item
+	AddItemToGA: &aAjouter un item
+
+	# Nom du papier, dans la liste des GiveAlls
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	GAListItem: &aGiveAll &7&l〈&2%{_ga}%&7&l〉
+
+	# Nom du livre, dans la liste des GiveAlls
+	# PlaceHolders: %{_grp}% pour indiquer le nom du groupe
+	GAListItemGroup: &bGroupe &7&l〈&3%{_grp}%&7&l〉
+
+	# Nom et lore de l'item pour basculer le mode d'affichage dans la liste du gui
+	ToggleDisplayModeInGuiListName: &aBasculer l'affichage des GiveAlls
+	ToggleDisplayModeInGuiListLore: &7&o(rangés par groupe ou pas)
+
+	# Nom de l'item pour basculer la visibilité des groupes vides
+	ToggleDisplayModeGroupAndGiveall: » Les groupes et les givealls
+	ToggleDisplayModeOnlyGroups: » Seulement les groupes
+	ToggleDisplayModeOnlyFullGroupsAndGiveall1: » Seulement les groupes contenant
+	ToggleDisplayModeOnlyFullGroupsAndGiveall2:    un/des giveall(s) et les givealls
+	ToggleDisplayModeOnlyGiveall: » Seulement les givealls
+
+	# Lore du livre, dans la liste des GiveAlls
+	# PlaceHolders: %{_action}% pour indiquer ce qui se passe quand on clique sur le GUI ("lancer" ou "arreter")
+	# PlaceHolders: %{_statut}% pour indiquer le statut du GiveAll ("en cours..." ou "arreté")
+	# PlaceHolders: %{_nbitem}% pour indiquer le nombre d'items du GiveAll
+	# PlaceHolders: %{_time}% pour indiquer la durée du GiveAll
+	# PlaceHolders: %{_cd}% pour indiquer le compte à rebours du GiveAll
+	# PlaceHolders: %{_conds}% pour indiquer le nombre de conditions de give d'un GiveAll
+	# PlaceHolders: %{_blacklist}% pour indiquer le nombre de joueurs blacklist de ce GiveAll
+	# PlaceHolders: %{_creator}% pour indiquer le créateur de ce GiveAll
+	# PlaceHolders: %{_date}% pour indiquer la date de création de ce GiveAll
+	LoreGAList: ||&cClick molette : modifier les items||&cClick droit : supprimer le GiveAll||&cShift click droit : supprimer le GiveAll instantanément||&cClick gauche : &c%{_action}%||&cShift click gauche : modifier le GiveAll||&r||&7&m--------------------||&r||&e&nInformations :||&a Nombre d'items : &2%{_nbitem}%||&a Durée : &2%{_time}%||&a Compte à rebours : &2%{_cd}%||&a Statut : &2%{_statut}%||&a Condition(s) : &2%{_conds}%||&a Joueurs blacklists : &2%{_blacklist}%||&a Créé par &2%{_creator}% &ale &2%{_date}%
+
+	# Lore du livre, dans la liste des GiveAlls
+	# PlaceHolders: %{_action}% pour indiquer ce qui se passe quand on clique sur le GUI ("lancer" ou "arreter")
+	# PlaceHolders: %{_nbga}% pour indiquer le nombre de GiveAlls
+	# PlaceHolders: %{_time}% pour indiquer la durée du GiveAll
+	# PlaceHolders: %{_cd}% pour indiquer le compte à rebours du GiveAll
+	# PlaceHolders: %{_creator}% pour indiquer le créateur de ce GiveAll
+	# PlaceHolders: %{_date}% pour indiquer la date de création de ce GiveAll
+	LoreGAListGroup: ||&c&mClick molette : &c&m%{_action}%&4 SOON ||&cClick droit : supprimer le groupe||&cShift click droit : supprimer le groupe instantanément||&cClick gauche : voir le contenu||&r||&7&m--------------------||&r||&e&nInformations :||&a Nombre de givealls : &2%{_nbga}%||&a &mDurée : &2&m%{_time}%&4 SOON||&a &mCompte à rebours : &2&m%{_cd}%&4 SOON||&a Créé par &2%{_creator}% &ale &2%{_date}%
+
+	# Nom de l'item de décoration, entre les deux boutons
+	# SeveralPageItem: &e&oA venir: Multi-Pages #L'item entre le boutton 'page suivante' et 'page précédente'. Il sera remplacé dans le futur par le numéro de la page (Update multipage à venir)
+
+	# Nom de l'item entre les bouttons "pages", qui permet d'indiquer la page actuelle
+	# PlaceHolders: %{_p}% pour indiquer la page actuelle
+	# PlaceHolders: %{_mp}% pour indiquer le nombre de page total
+	InfoPageItem: &ePage Actuelle: &f%{_p}%
+	LoreInfoPageItem: &eNombre de pages: &f%{_mp}%
+
+	# L'action que va executer le click gauche (quand on clique alors qu'il n'est pas lancé) (dans la liste GUI et dans le /ga modify)
+	LeftClickActionStart: &cLancer
+
+	# Idem que LeftClickActionStart mais quand le GiveAll est vide.
+	LeftClickActionCantStart: &7&mlancer&7&o (Pas d'item)
+
+	# L'action que va executer le click gauche (quand on clique alors qu'il n'est pas lancé) (dans la liste GUI et dans le /ga modify)
+	LeftClickActionStartGroup: &cLancer
+
+	# Idem que LeftClickActionStart mais quand le groupe n'a aucun giveall
+	LeftClickActionCantStartGAGroup: &7&mlancer&7&o (Pas de giveall)
+
+	# Idem que LeftClickActionStart mais quand aucun giveall du groupe n'a d'item
+	LeftClickActionCantStartItemGroup: &7&mlancer&7&o (Aucun item)
+
+	# L'action que va executer le click gauche (quand on clique alors qu'il est lancé) (dans la liste GUI et dans le /ga modify)
+	LeftClickActionStop: &cArrêter
+
+	# Le status du GiveAll (pendant le compte a rebours)
+	StatusInCountDown: lancement...
+
+	# Le status du GiveAll (quand il est en cours)
+	StatusInProgress: en cours !
+
+	# Le status du GiveAll (quand il est arreté)
+	StatusStop: arreté
+
+	# Item pour clear les items d'un GiveAll (via le GUI EditItems)
+	ClearGA: &cClear les items du GiveAll
+
+	# Quand un GiveAll est infini (dans la liste des GiveAll)
+	InfiniteTimeForGUIList: Infinie
+
+	# Nom de l'item pour renommer un GiveAll dans le GUI pour modifier les paramètres d'un GiveAll
+	GAModifyRename: &eRenommer
+
+	# Nom de l'item pour renommer un GiveAll dans le GUI pour modifier les paramètres d'un GiveAll
+	GAModifyDuplicate: &eDupliquer
+
+	# Nom de l'item pour renommer un GiveAll dans le GUI pour modifier les paramètres d'un GiveAll
+	# PlaceHolders: %{_drop}% pour indiquer le type de drop
+	GAModifyChangeDropType: &eChanger le type de drop
+	GAModifyChangeDropTypeLore: &7Actuellement : %{_drop}%
+
+	# Nom de l'item pour modifier les items d'un Giveall, dans le GUI pour modifier les paramètres d'un GiveAll
+	GAEditItems: &eModifier les items
+
+	# Nom de l'item pour supprimer le GiveAll dans le GUi "modify"
+	DeleteInModifyGUI: &cSupprimer
+
+	# Items pour modifier la durée d'un GiveAll dans le GUI "modify"
+	# PlaceHolders: %{_time}% pour indiquer le temps
+	AddTimeByGUI: &aAjouter %{_time}%&as à la durée du GiveAll
+	RemoveTimeByGUI: &cEnlever %{_time}%&cs à la durée du GiveAll
+	SeeTimeByGUI: &aDurée du GiveAll : &2%{_time}%&as
+	LoreSeeTimeByGUI: &r||&20 &a= Infini||&7Click droit: réinitialiser le temps
+
+	# Items pour modifier la durée d'un compte a rebours dans le GUI "modify"
+	# PlaceHolders: %{_time}% pour indiquer le compte a rebours
+	AddCDByGUI: &aAjouter %{_time}%&as à la durée du compte à rebours
+	RemoveCDByGUI: &cEnlever %{_time}%&cs à la durée du compte à rebours
+	SeeCDByGUI: &aDurée du compte à rebours : &2%{_time}%&as
+	LoreSeeCDByGUI: ||&7Click droit: réinitialiser le compte à rebours
+
+	# Item pour modifier la condition d'un GiveAll
+	ModifyCondition: &aModifier la condition
+
+	# Item pour supprimer la condition d'un GiveAll
+	GAClearCondItem: &cSupprimer la condition
+
+	# Lore de l'item d'information, dans le GUI pour changer la condition
+	InfoConditionModify: &aCondition actuelle :&r
+
+	# Information sur la région dans laquelle on se trouve (lore de l'item qui sert à définir la condition "etre" ou "ne pas être" dans une région)
+	# PlaceHolders: %{_rg}% pour indiquer la région dans laquelle on se trouve
+	RegionInfo: &aRégion où vous êtes: &2%{_rg}%
+
+	# Nom des items dans les GUI quand on ne peut pas faire une certaine action.
+	NotEnoughPermissionInGUI: &cPermission insuffisante !
+
+	#-----------------------------------------------------#
+	# 					  Conditions 					  #
+	#-----------------------------------------------------#
+
+	# Configuration des conditions. _desc = description de la condition, _name = nom complet de la condition.
+	msg-same_desc: Envoyer le même message que celui défini
+	msg-same_name: Message identique
+	msg-contain_desc: Envoyer un message qui contient celui défini
+	msg-contain_name: Message contenant X
+	perm_desc: Avoir la permission définie
+	perm_name: Permission
+	min-kill_desc: Avoir un nombre minimum de kill
+	min-kill_name: Nombre de kill minimum
+	max-kill_desc: Avoir un nombre maximum de kill
+	max-kill_name: Nombre de kill maximum
+	min-death_desc: Avoir un nombre minimum de morts
+	min-death_name: Nombre de morts minimum
+	max-death_desc: Avoir un nombre maximum de morts
+	max-death_name: Nombre de morts maximum
+	min-money_desc: Avoir un nombre minimum d'argent (requiert un plugin d'economie : /ga api)
+	min-money_name: Argent minimum
+	max-money_desc: Avoir un nombre maximum d'argent (requiert un plugin d'economie : /ga api)
+	max-money_name: Argent maximum
+	min-co_desc: S'être connecté un minimum de temps [le définir en secondes] (requiert PlayTime : /ga api)
+	min-co_name: Temps de connexion minimum
+	max-co_desc: S'être connecté un maximum de temps [le définir en secondes] (requiert PlayTime : /ga api)
+	max-co_name: Temps de connexion maximum
+	in-region_desc: Etre dans une certaine région (requiert WorldGuard : /ga api)
+	in-region_name: Doit être dans une région
+	not-in-region_desc: Ne doit pas être dans une certaine région (requiert WorldGuard : /ga api)
+	not-in-region_name: Ne doit pas être dans une région
+	in-world_desc: Doit être dans un certain monde
+	in-world_name: Doit être dans un monde
+	not-in-world_desc: Ne doit pas être dans un certain monde
+	not-in-world_name: Ne doit pas être dans un monde
+	min-ratio_desc: Avoir un ratio plus grand que celui définit
+	min-ratio_name: Ratio minimum
+	max-ratio_desc: Avoir un ratio plus petit que celui définit
+	max-ratio_name: Ratio maximum
+
+	#-----------------------------------------------------#
+	# 					Configuration 					  #
+	#-----------------------------------------------------#
+
+	# Temps entre chaque give d'item (temps minimum et maximum)
+	# en secondes
+	MinGiveTime: 1
+	MaxGiveTime: 3
+
+	# Est-ce que les messages ci-après seront envoyés a la personne en question ?
+	DoNotifyVictimOnBlacklist: true 	# Message quand on ajoute quelqu'un a la blacklist d'un GiveAll
+	DoNotifyVictimOnUnblacklist: true  	# Message quand on retire quelqu'un de la blacklist d'un GiveAll
+
+	# Message quand un joueur ajoute/retire quelqu'un de la blacklist d'un GiveAll
+	# PlaceHolders: %{_ga}% pour indiquer le nom du GiveAll
+	# PlaceHolders: %{_p}% pour indiquer la personne qui a blacklist/unblacklist
+	# PlaceHolders: %{_e}% pour indiquer l'executeur de la commande
+	NotifyVictimOnBlacklist: &cVous avez été blacklist par %{_e}% du GiveAll %{_ga}%
+	NotifyVictimOnUnblacklist: &aVous avez été retiré de la blacklist du GiveAll %{_ga}% par %{_e}%
+
+	# Nom de la commande principale
+	MainCommand: GiveAll #Peu importe les majuscules/minuscules
+
+	# Nom des alias
+	AliasesCommands: ga, givea, gall, give-all #Séparer avec une virgule
+
+	# Son pendant le compte a rebours
+	# Liste des sons: https://forum.minecraft-france.fr/threads/16888/
+	TimerSound: random.orb
+
+	# Nombre en seconde que l'on a pour refaire /ga purge (pour confirmer notre purge)
+	purgeConfirmExpire: 30
+
+	# Groupe par défaut (quand un giveall n'a pas de groupe). Il est déconseillé de changer cette valeur si vous avez déjà créé des GiveAlls
+	defaultGroup: $none
+
+	# Format de la date.
+	# dd = jour | MM = mois | yy = 2 derniers nombre de l'année | yyyy = année | HH = heure | mm = minute | ss = secondes | SSS = milisecondes
+	dateFormat: dd/MM/yy à HH:mm
+
+	#-----------------------------------------------------#
+	# 						Permission 					  #
+	#-----------------------------------------------------#
+	# Permissions.
+	PermissionAll: giveall.*
+	PermissionCreate: giveall.create
+	PermissionStart: giveall.start
+	PermissionReload: giveall.reload
+	PermissionStop: giveall.stop
+	PermissionGiveHand: giveall.givehand
+	PermissionDelete: giveall.delete
+	PermissionPurge: giveall.purge
+	PermissionAddItem: giveall.additem
+	PermissionInfo: giveall.info
+	PermissionEditItem: giveall.edititem
+	PermissionChatList: giveall.list.chat
+	PermissionGUIList: giveall.list.gui
+	PermissionRename: giveall.rename
+	PermissionHelp: giveall.help
+	PermissionUpdateCheck: giveall.updatecheck
+	PermissionCopyContent: giveall.copycontent
+	PermissionDuplicate: giveall.duplicate
+	PermissionClearGA: giveall.clear
+	PermissionModify: giveall.modify
+	PermissionChangeTime: giveall.settime
+	PermissionChangeCountDown: giveall.setcountdown
+	PermissionModifyCondition: giveall.condition.modify
+	PermissionSeeCondition: giveall.condition.see
+	PermissionBypassCondition: giveall.condition.bypass
+	PermissionBlackList: giveall.blacklist
+	PermissionExemptBlackList: giveall.blacklist.exempt # Ne pas pouvoir être ajouté à la BlackList
+	PermissionChangeDropType: giveall.changedrop
+
+	PermissionGroupAll: giveall.group.*
+	PermissionGroupCreate: giveall.group.create
+	PermissionGroupStart: giveall.group.start
+	PermissionGroupStop: giveall.group.stop
+	PermissionGroupDelete: giveall.group.delete
+	PermissionGroupInfo: giveall.group.info
+	PermissionGroupInfoGui: giveall.group.info.gui
+	PermissionGroupList: giveall.group.list
+	PermissionGroupAddGa: giveall.group.addga
+	PermissionGroupRemoveGa: giveall.group.removega
+	PermissionGroupClear: giveall.group.clear
+	PermissionGroupPurge: giveall.group.purge
+
+#+---------------------------------------------------------------------------------+
+#| +----------------------------------------------------------------------------+  |
+#| |                                                                            |  |
+#| |                         	CODE : NE PAS TOUCHER                           |  |
+#| |                                                                            |  |
+#| +----------------------------------------------------------------------------+  |
+#+---------------------------------------------------------------------------------+
+
+	#-----------------------------------------------------#
+	# 					UpdateCheck						  #
+	#-----------------------------------------------------#
+options:
+	version: 2.0-beta-5 #!#! Ne pas changer !#!#
+function updateCheck(p: player):
+	set {_newver} to text from "https://raw.githubusercontent.com/noftaly/GiveAll/master/version"
+	if {_newver} isn't "{@version}":
+		set {_new} to text from "https://raw.githubusercontent.com/noftaly/GiveAll/master/Nouveautes"
+		message "&8[&4&m-------------------------&c&m>&6&m+&c&m<&4&m-------------------------&8]" to {_p}
+		message "&r" to {_p}
+		message "{@Prefix} &aLe skript de &2GiveAll&a n'est pas à jour ! &f&o({@version} / %{_newver}%)" to {_p}
+		message "{@Prefix} &aNouveautés &f&o(de la version %{_newver}%) &a: &2%uncolored {_new}%" to {_p}
+		message "{@Prefix} &aLien de téléchargement :&2 https://bit.ly/2tLQ1nR" to {_p}
+		message "&r" to {_p}
+		message "&8[&4&m-------------------------&c&m>&6&m+&c&m<&4&m-------------------------&8]" to {_p}
+	else:
+		message "{@Prefix} &aLe skript est à jour ! &a&oBon jeu !" to {_p}
+
+	#-----------------------------------------------------#
+	# 				  Fonctions d'executions 			  #
+	#-----------------------------------------------------#
+
+function GiveAll_init():
+	# Variables très importantes : elles régissent les conditions. Ce sont des modèles sur lesquels se calquent les nouvelles conditions
+	clear {ga::debug::conds::*}
+	clear {ga::debug::conds}
+	add "msg-same", "msg-contain", "perm", "min-kill", "max-kill", "min-death", "max-death", "min-money", "max-money", "min-co", "max-co", "in-region", "not-in-region", "in-world", "not-in-world", "min-ratio" and "max-ratio" to {ga::debug::conds::*}
+	loop {ga::debug::conds::*}:
+		set {ga::debug::conds::%loop-value%::isEnable} to false
+		set {ga::debug::conds::%loop-value%::value} to "Aucune"
+	set {ga::debug::conds::msg-same::description} to "{@msg-same_desc}"
+	set {ga::debug::conds::msg-same::fullName} to "{@msg-same_name}"
+	set {ga::debug::conds::msg-contain::description} to "{@msg-contain_desc}"
+	set {ga::debug::conds::msg-contain::fullName} to "{@msg-contain_name}"
+	set {ga::debug::conds::perm::description} to "{@perm_desc}"
+	set {ga::debug::conds::perm::fullName} to "{@perm_name}"
+	set {ga::debug::conds::min-kill::description} to "{@min-kill_desc}"
+	set {ga::debug::conds::min-kill::fullName} to "{@min-kill_name}"
+	set {ga::debug::conds::max-kill::description} to "{@max-kill_desc}"
+	set {ga::debug::conds::max-kill::fullName} to "{@max-kill_name}"
+	set {ga::debug::conds::min-death::description} to "{@min-death_desc}"
+	set {ga::debug::conds::min-death::fullName} to "{@min-death_name}"
+	set {ga::debug::conds::max-death::description} to "{@max-death_desc}"
+	set {ga::debug::conds::max-death::fullName} to "{@max-death_name}"
+	set {ga::debug::conds::min-money::description} to "{@min-money_desc}"
+	set {ga::debug::conds::min-money::fullName} to "{@min-money_name}"
+	set {ga::debug::conds::max-money::description} to "{@max-money_desc}"
+	set {ga::debug::conds::max-money::fullName} to "{@max-money_name}"
+	set {ga::debug::conds::min-co::description} to "{@min-co_desc}"
+	set {ga::debug::conds::min-co::fullName} to "{@min-co_name}"
+	set {ga::debug::conds::max-co::description} to "{@max-co_desc}"
+	set {ga::debug::conds::max-co::fullName} to "{@max-co_name}"
+	set {ga::debug::conds::in-region::description} to "{@in-region_desc}"
+	set {ga::debug::conds::in-region::fullName} to "{@in-region_name}"
+	set {ga::debug::conds::not-in-region::description} to "{@not-in-region_desc}"
+	set {ga::debug::conds::not-in-region::fullName} to "{@not-in-region_name}"
+	set {ga::debug::conds::in-world::description} to "{@in-world_desc}"
+	set {ga::debug::conds::in-world::fullName} to "{@in-world_name}"
+	set {ga::debug::conds::not-in-world::description} to "{@not-in-world_desc}"
+	set {ga::debug::conds::not-in-world::fullName} to "{@not-in-world_name}"
+	set {ga::debug::conds::min-ratio::description} to "{@min-ratio_desc}"
+	set {ga::debug::conds::min-ratio::fullName} to "{@min-ratio_name}"
+	set {ga::debug::conds::max-ratio::description} to "{@max-ratio_desc}"
+	set {ga::debug::conds::max-ratio::fullName} to "{@max-ratio_name}"
+	loop all players:
+		if {ga::player::%loop-player%::dispMode} is not set:
+			set {ga::player::%loop-player%::dispMode} to "GroupsAndGa"
+	set {ga::debug::indexToHuman::time} to "Durée"
+	set {ga::debug::indexToHuman::countdown} to "Compte à rebours"
+	set {ga::debug::indexToHuman::group} to "Groupe"
+	set {ga::debug::indexToHuman::status} to "Statut"
+	set {ga::debug::indexToHuman::droptype} to "Type de don des items"
+
+function GiveAll_newGiveAll(ga: text, group: text, time: integer, countdown: integer, drop: text, creator: text, date: text, items: items):
+	add {_ga} to {ga::list::*}
+	set {ga::specs::%{_ga}%::time} to {_time}
+	set {ga::specs::%{_ga}%::countdown} to {_countdown}
+	set {ga::specs::%{_ga}%::group} to {_group}
+	set {ga::specs::%{_ga}%::status} to "Stop"
+	set {ga::specs::%{_ga}%::droptype} to {_drop}
+	set {ga::specs::%{_ga}%::infos::date} to {_date}
+	set {ga::specs::%{_ga}%::infos::creator} to {_creator}
+	loop {ga::debug::conds::*}:
+		add loop-value to {ga::specs::%{_ga}%::conditions::*}
+	loop {_items::*}:
+		set {_itm} to loop-value
+		add {_itm} to {ga::specs::%{_ga}%::items::*}
+
+function GiveAll_newGroup(grp: text, time: integer, countdown: integer, creator: text, date: text):
+	add {_grp} to {ga::glist::*}
+	set {ga::gspecs::%{_grp}%::time} to {_time}
+	set {ga::gspecs::%{_grp}%::countdown} to {_countdown}
+	set {ga::gspecs::%{_grp}%::infos::date} to {_date}
+	set {ga::gspecs::%{_grp}%::infos::creator} to {_creator}
+
+function GiveAll_deleteGroup(grp: text):
+	clear {ga::gspecs::%{_grp}%::givealls::*} # On clear son contenu
+	clear {ga::gspecs::%{_grp}%::*} # On clear ses specs
+	remove {_grp} from {ga::gspecs::*} # On l'enlève de la liste des specs. Maintenant cette liste a un trou mais on s'en fiche (car c'est juste une liste de stockage de données)
+	remove {_grp} from {ga::glist::*} # On l'enlève de la liste des groupes. Mais maintenant cette liste a un trou mais on s'en fiche pas (car on va se servir de cette liste pour afficher les GiveAlls dans le GUI, et on veut pas qu'il y ait de trous)
+	set {_l::*} to {ga::glist::*} # Du coup on recréé la liste mais sans trou
+	clear {ga::glist::*}
+	add {_l::*} to {ga::glist::*}
+
+function GiveAll_deleteGiveAll(ga: text):
+	loop {ga::glist::*}:
+		GiveAll_removeGaFromGroup({_ga}, loop-value)
+	clear {ga::specs::%{_ga}%::*} # On clear ses specs
+	remove {_ga} from {ga::specs::*} # On l'enlève de la liste des specs. Maintenant cette liste a un trou mais on s'en fiche (car c'est juste une liste de stockage de données)
+	remove {_ga} from {ga::list::*} # On l'enlève de la liste des GiveAlls. Mais maintenant cette liste a un trou mais on s'en fiche pas (car on va se servir de cette liste pour afficher les GiveAlls dans le GUI, et on veut pas qu'il y ait de trous)
+	set {_l::*} to {ga::list::*} # Du coup on recréé la liste mais sans trou
+	clear {ga::list::*}
+	add {_l::*} to {ga::list::*}
+
+function GiveAll_stop(ga: text):
+	clear {ga::current::%{_ga}%::*}
+	set {ga::specs::%{_ga}%::status} to "Stop"
+	remove {_ga} from {ga::current::*}
+
+function GiveAll_purgeGiveAll():
+	loop {ga::glist::*}:
+		loop {ga::list::*}:
+			GiveAll_removeGaFromGroup(loop-value-2, loop-value-1)
+	clear {ga::list::*}
+	clear {ga::specs::*}
+
+function GiveAll_purgeGroup():
+	clear {ga::glist::*}
+	clear {ga::gspecs::*}
+
+function GiveAll_renameGiveAll(old: text, new: text):
+	set {_stime} to {ga::specs::%{_old}%::time}
+	set {_specs::status} to {ga::specs::%{_old}%::status}
+	set {_specs::group} to {ga::specs::%{_old}%::group}
+	set {_specs::countdown} to {ga::specs::%{_old}%::countdown}
+	set {_specs::drop} to {ga::specs::%{_old}%::droptype}
+	set {_specs::infos::date} to {ga::specs::%{_old}%::infos::date}
+	set {_specs::infos::creator} to {ga::specs::%{_old}%::infos::creator}
+	set {_specs::conditions::*} to {ga::specs::%{_old}%::conditions::*}
+	set {_specs::items::*} to {ga::specs::%{_old}%::items::*}
+	GiveAll_deleteGiveAll({_old})
+	GiveAll_newGiveAll({_new}, {_specs::group}, {_stime}, {_specs::countdown}, {_specs::drop}, {_specs::infos::creator}, {_specs::infos::date},{_specs::items::*})
+	set {ga::specs::%{_new}%::status} to {_specs::status}
+
+function GiveAll_copyItems(import: text, export: text):
+	add {ga::specs::%{_import}%::items::*} to {ga::specs::%{_export}%::items::*}
+
+function GiveAll_setDropType(ga: text, type: text):
+	if {_type} is "drop" or "give":
+		set {ga::specs::%{_ga}%::droptype} to {_type}
+
+function GiveAll_removeItem(ga: text, i: item):
+	remove {_i} from {ga::specs::%{_ga}%::items::*}
+	set {_item1::*} to {ga::specs::%{_ga}%::items::*}
+	clear {ga::specs::%{_ga}%::items::*}
+	wait 1 tick
+	set {ga::specs::%{_ga}%::items::*} to {_item1::*}
+
+function GiveAll_addCondition(ga: text, cond: text, val: text):
+	set {ga::specs::%{_ga}%::conditions::%{_cond}%::isEnable} to true
+	set {ga::specs::%{_ga}%::conditions::%{_cond}%::fullName} to {ga::debug::conds::%{_cond}%::fullName}
+	set {ga::specs::%{_ga}%::conditions::%{_cond}%::description} to {ga::debug::conds::%{_cond}%::description}
+	set {ga::specs::%{_ga}%::conditions::%{_cond}%::value} to {_val}
+
+function GiveAll_removeCondition(ga: text, cond: text):
+	set {ga::specs::%{_ga}%::conditions::%{_cond}%::isEnable} to false
+
+function GiveAll_addGaToGroup(ga: text, grp: text):
+	add {_ga} to {ga::gspecs::%{_grp}%::givealls::*}
+
+function GiveAll_removeGaFromGroup(ga: text, grp: text):
+	remove {_ga} from {ga::gspecs::%{_grp}%::givealls::*}
+	set {_g::*} to {ga::gspecs::%{_grp}%::givealls::*}
+	clear {ga::gspecs::%{_grp}%::givealls::*}
+	wait 1 tick
+	set {ga::gspecs::%{_grp}%::givealls::*} to {_g::*}
+
+function GiveAll_clearGroup(grp: text):
+	clear {ga::gspecs::%{_grp}%::givealls::*}
+
+	#-----------------------------------------------------#
+	# 				Fonctions d'informations 			  #
+	#-----------------------------------------------------#
+
+function GiveAll_debug(fix: boolean=true) :: strings:
+	set {ga::debug::minGiveTime} to {@MinGiveTime}
+	set {ga::debug::maxGiveTime} to {@MaxGiveTime}
+	if {@MinGiveTime} is not an integer:
+		add "Le temps de give minimum n'est pas un entier.%("" [RESOLU] (Valeur par défaut: 1)"") if {_fix} is true, else """"%" to {_errors::*}
+		if {_fix} is true:
+			set {ga::debug::minGiveTime} to 1
+	if {@MaxGiveTime} is not an integer:
+		add "Le temps de give maximum n'est pas un entier.%(""  [RESOLU] (Valeur par défaut: 3)"") if {_fix} is true, else """"%" to {_errors::*}
+		if {_fix} is true:
+			set {ga::debug::maxGiveTime} to 3
+	if {ga::debug::minGiveTime} < 0:
+		set {_a} to abs({ga::debug::minGiveTime})
+		set {_b} to "  [RESOLU] (Valeur absolue: %{_a}%)"
+		add "Le temps de give minimum est inférieur à 0.%{_b} if {_fix} is true, else """"%" to {_errors::*}
+		if {_fix} is true:
+			set {ga::debug::minGiveTime} to abs({ga::debug::minGiveTime})
+	if {ga::debug::maxGiveTime} < 0:
+		set {_a} to abs({ga::debug::maxGiveTime})
+		set {_b} to "  [RESOLU] (Valeur absolue: %{_a}%)"
+		add "Le temps de give maximum est inférieur à 0.%{_b} if {_fix} is true, else """"%" to {_errors::*}
+		if {_fix} is true:
+			set {ga::debug::maxGiveTime} to abs({ga::debug::maxGiveTime})
+	if {ga::debug::minGiveTime} > {ga::debug::maxGiveTime}:
+		add "Le temps de give minimum est supérieur au temps de give maximum.%(""  [RESOLU] (Inversement des valeurs)"") if {_fix} is true, else """"%" to {_errors::*}
+		if {_fix} is true:
+			set {_max} to {ga::debug::maxGiveTime}
+			set {ga::debug::maxGiveTime} to {ga::debug::minGiveTime}
+			set {ga::debug::minGiveTime} to {_max}
+	return {_errors::*}
+
+function GiveAll_gaExist(ga: text) :: boolean:
+	loop {ga::list::*}:
+		if loop-value is {_ga}:
+			return true
+	return false
+
+function GiveAll_grpExist(grp: text) :: boolean:
+	loop {ga::glist::*}:
+		if loop-value is {_grp}:
+			return true
+	return false
+
+function GiveAll_isInProgress(ga:text) :: boolean:
+	if {ga::current::%{_ga}%::status} is "Countdown" or "In progress":
+		return true
+	return false
+
+function GiveAll_current() :: texts:
+	return {ga::current::*}
+
+function GiveAll_hasConditions(ga: text) :: boolean:
+	loop {ga::specs::%{_ga}%::conditions::*}:
+		if {ga::specs::%{_ga}%::conditions::%loop-value%::isEnable} is true:
+			return true
+	return false
+
+function GiveAll_activeConditions(ga: text) :: integer:
+	set {_c} to 0
+	loop {ga::specs::%{_ga}%::conditions::*}:
+		if {ga::specs::%{_ga}%::conditions::%loop-value%::isEnable} is true:
+			add 1 to {_c}
+	return {_c}
+
+function GiveAll_isBlacklist(p: text, ga: text) :: boolean:
+	loop {ga::specs::%{_ga}%::blacklist::*}:
+		if loop-value is {_p}:
+			return true
+	return false
+
+function GiveAll_isLastGiveAll() :: boolean:
+	loop {ga::list::*}:
+		return false
+	return true
+
+function GiveAll_playerCanReceiveItems(p: player, ga: text) :: boolean:
+	# Si il est blacklist
+	if GiveAll_isBlacklist({_p}, {_ga}) is true:
+		return false
+	# Si le giveall n'a aucune condition
+	if GiveAll_hasConditions({_ga}) is not true:
+		return true
+	if {ga::specs::%{_ga}%::conditions::msg-same::isEnable} is true:
+		if {ga::player::%{_p}%::cond::msg-same::%{_ga}%} < 1:
+			return false
+	if {ga::specs::%{_ga}%::conditions::msg-contain::isEnable} is true:
+		if {ga::player::%{_p}%::cond::msg-contain::%{_ga}%} is not set:
+			set {ga::player::%{_p}%::cond::msg-contain::%{_ga}%} to 0
+		if {ga::player::%{_p}%::cond::msg-contain::%{_ga}%} < 1:
+			return false
+	if {ga::specs::%{_ga}%::conditions::perm::isEnable} is true:
+		if {_p} doesn't have permission "%{ga::specs::%{_ga}%::conditions::perm::value}%":
+			return false
+	if {ga::specs::%{_ga}%::conditions::min-kill::isEnable} is true:
+		if {ga::player::%{_p}%::cond::kill} < ({ga::specs::%{_ga}%::conditions::min-kill::value} parsed as integer):
+			return false
+	if {ga::specs::%{_ga}%::conditions::max-kill::isEnable} is true:
+		if {ga::player::%{_p}%::cond::kill} > ({ga::specs::%{_ga}%::conditions::max-kill::value} parsed as integer):
+			return false
+	if {ga::specs::%{_ga}%::conditions::min-death::isEnable} is true:
+		if {ga::player::%{_p}%::cond::death} < ({ga::specs::%{_ga}%::conditions::min-death::value} parsed as integer):
+			return false
+	if {ga::specs::%{_ga}%::conditions::max-death::isEnable} is true:
+		if {ga::player::%{_p}%::cond::death} > ({ga::specs::%{_ga}%::conditions::max-death::value} parsed as integer):
+			return false
+	if {ga::specs::%{_ga}%::conditions::min-money::isEnable} is true:
+		if {_p}'s balance < ({ga::specs::%{_ga}%::conditions::min-money::value} parsed as integer):
+			return false
+	if {ga::specs::%{_ga}%::conditions::max-money::isEnable} is true:
+		if {_p}'s balance > ({ga::specs::%{_ga}%::conditions::max-money::value} parsed as integer):
+			return false
+	set {_c} to ("%PlayTimeAPI({_p}, ""totalCoTime"", true)%" parsed as time span)
+	if {ga::specs::%{_ga}%::conditions::min-co::isEnable} is true:
+		set {_v1} to ({ga::specs::%{_ga}%::conditions::min-co::value} parsed as integer)
+		set {_v2} to ("%{_v1}% seconds" parsed as time span)
+		if {_c} < {_v2}:
+			return false
+	if {ga::specs::%{_ga}%::conditions::max-co::isEnable} is true:
+		set {_v1} to ({ga::specs::%{_ga}%::conditions::max-co::value} parsed as integer)
+		set {_v2} to ("%{_v1}% seconds" parsed as time span)
+		if {_c} > {_v2}:
+			return false
+	set {_r::*} to regex split "%region at {_p}%" with " in world ([A-Za-z0-9])\w*"
+	if {ga::specs::%{_ga}%::conditions::in-region::isEnable} is true:
+		if "%{_r::1}%" is not {ga::specs::%{_ga}%::conditions::in-region::value}:
+			return false
+	if {ga::specs::%{_ga}%::conditions::not-in-region::isEnable} is true:
+		if "%{_r::1}%" is {ga::specs::%{_ga}%::conditions::in-region::value}:
+			return false
+	if {ga::specs::%{_ga}%::conditions::in-world::isEnable} is true:
+		if {_p} is not in world world("%{ga::specs::%{_ga}%::conditions::in-world::value}%"):
+			return false
+	if {ga::specs::%{_ga}%::conditions::not-in-world::isEnable} is true:
+		if {_p} is in world world("%{ga::specs::%{_ga}%::conditions::in-world::value}%"):
+			return false
+	if {ga::specs::%{_ga}%::conditions::min-ratio::isEnable} is true:
+		if ({ga::player::%{_p}%::cond::kill} / {ga::player::%{_p}%::cond::death}) < ({ga::specs::%{_ga}%::conditions::min-ratio::value} parsed as number):
+			return false
+	if {ga::specs::%{_ga}%::conditions::max-ratio::isEnable} is true:
+		if ({ga::player::%{_p}%::cond::kill} / {ga::player::%{_p}%::cond::death}) > ({ga::specs::%{_ga}%::conditions::max-ratio::value} parsed as number):
+			return false
+	return true
+
+function realPlayer(pl: text) :: boolean:
+	set {_p} to {_pl} parsed as offline player
+	loop {ga::debug::allplayers::*}:
+		if loop-value is {_p}:
+			return true
+	return false
+
+function contains(sample: texts, scope: text) :: boolean:
+	loop {_sample::*}:
+		if loop-value is {_scope}:
+			return true
+	return false
+
+function or(conditions: booleans) :: boolean: # Fonction de Anarchick
+	if {_conditions::*} contains true:
+		return true
+	return false
+
+function and(conditions: booleans) :: boolean: # Fonction de Anarchick
+	if {_conditions::*} contains false:
+		return false
+	return true
+
+	#-----------------------------------------------------#
+	# 				  Fonctions d'actions 			 	 #
+	#-----------------------------------------------------#
+
+function GiveAll_confirmDeleteGUI(p: player, type: text, e: text, cmd: text):
+	set {_ga} to {_e}
+	open virtual chest with 2 rows named "{@ConfirmDeleteGUI}" to {_p}
+	format gui slot 4 of {_p} with book named "{@InfoGAName}"
+	format gui slot 12 of {_p} with red dye named "{@CancelDelete}" to run:
+		make {_p} execute command "/{@MainCommand} %{_cmd}%"
+	format gui slot 14 of {_p} with slimeball named "{@ConfirmDelete}" to run:
+		set {ga::player::%{_p}%::dispMode} to "GroupsAndGa"
+		if {_type} is "ga":
+			make {_p} execute command "/{@MainCommand} delete %{_e}%"
+			if GiveAll_isLastGiveAll() is false:
+				make {_p} execute command "/{@MainCommand} list gui"
+				stop
+			close {_p}'s inventory
+		else if {_type} is "grp":
+			make {_p} execute command "/{@MainCommand} group delete %{_e}%"
+
+function GiveAll_listOptionsGUI(p: player, type: text, clicktype: text, e: text):
+	if {_type} is "ga":
+		if {_clicktype} is "gauche":
+			if contains(GiveAll_current(), {_e}):
+				make {_p} execute command "/{@MainCommand} stop %{_e}%"
+			else:
+				make {_p} execute command "/{@MainCommand} start %{_e}%"
+			wait 0.5 seconds
+			make {_p} execute command "/{@MainCommand} list gui"
+		else if {_clicktype} is "middle":
+			make {_p} execute command "/{@MainCommand} edititem %{_e}%"
+		else if {_clicktype} is "shiftgauche":
+			make {_p} execute command "/{@MainCommand} modify %{_e}%"
+		else if {_clicktype} is "shiftdroit":
+			make {_p} execute command "/{@MainCommand} delete %{_e}%"
+			set {ga::player::%{_p}%::dispMode} to "GroupsAndGa"
+			if GiveAll_isLastGiveAll() is false:
+				make {_p} execute command "/{@MainCommand} list gui"
+				stop
+			close {_p}'s inventory
+	else if {_type} is "grp":
+		if {_clicktype} is "gauche":
+			make {_p} execute command "/{@MainCommand} group info %{_e}% gui"
+		else if {_clicktype} is "middle":
+			make {_p} execute command "/{@MainCommand} list gui"
+		else if {_clicktype} is "shiftdroit":
+			make {_p} execute command "/{@MainCommand} group delete %{_e}%"
+			set {ga::player::%{_p}%::dispMode} to "GroupsAndGa"
+			if GiveAll_isLastGiveAll() is false:
+				make {_p} execute command "/{@MainCommand} list gui"
+				stop
+			close {_p}'s inventory
+	if {_clicktype} is "droit":
+		GiveAll_confirmDeleteGUI({_p}, "%{_type}%", "%{_e}%", "list gui")
+
+function GiveAll_conditionGUI(p: player, ga: text, modify: boolean=false):
+	if {_modify}:
+		open virtual chest with 4 rows named "{@ModifyConditionGUI}" to {_p}
+		format gui slot 35 of {_p} with arrow named "{@BackItem}" to run:
+			make {_p} execute command "/ga modify %{_ga}%"
+	else:
+		open virtual chest with 3 rows named "{@ModifyConditionGUI}" to {_p}
+	format gui slot 4 of {_p} with book named "{@InfoGAName}"
+	set {_i} to 9
+	loop {ga::debug::conds::*}:
+		set {_cond} to loop-value
+		set {_name} to "&2%{ga::debug::conds::%{_cond}%::fullName}%"
+		set {_desc} to "&7%{ga::debug::conds::%{_cond}%::description}%"
+		replace all "(requiert" with "&7&oRequiert" in {_desc}
+		replace all ": /ga api)" with ": /ga api" in {_desc}
+		set {_lore} to "&c&oDésactivé"
+		if {ga::specs::%{_ga}%::conditions::%{_cond}%::isEnable}:
+			set {_lore} to "&a&oActivé &7&o➟ %{ga::specs::%{_ga}%::conditions::%{_cond}%::value}%"
+		format gui slot {_i} of {_p} with name tag named {_name} with lore "%{_lore}%", "" and "%{_desc}%" to run:
+			close {_p}'s inventory
+			message "&r%nl%&r%nl%{@Prefix} <tooltip:{@TTPClickForAction}><suggest command:/ga cond set %{_ga}% %{_cond}% Valeur %(""en secondes"") if {_cond} is ""min-co"" or ""max-co"", else """"%>{@MSGClickForAction}&r%nl%&r%nl%&r" to {_p}
+		add 1 to {_i}
+
+function GiveAll_commandParams(type: text, arg.3: text, arg.4: text, arg.5: text) :: integer:
+	if {_type} is "cd":
+		loop all integers between 3 and 5:
+			if {_arg.%loop-value%} contains "cd:":
+				replace "cd:" with "" in {_arg.%loop-value%}
+				set {_x} to ({_arg.%loop-value%} parsed as integer)
+				if and(check [{_x} != 0], check [{_x} < 10]):
+					set {_x} to 10
+		return {_x}
+	else if {_type} is "t":
+		loop all integers between 3 and 5:
+			if {_arg.%loop-value%} contains "t:":
+				replace "t:" with "" in {_arg.%loop-value%}
+				set {_x} to ({_arg.%loop-value%} parsed as integer)
+				set {_x} to abs({_x})
+		return {_x}
+
+command /ag [<text>] [<text>] [<text>] [<text>] [<text>]:
+	#aliases: {@AliasesCommands}
+	executable by: player and console
+	trigger:
+		#-----------------------------------------------------#
+		# 						Start 						  #
+		#-----------------------------------------------------#
+		if arg-1 is "start":
+			if player has permission "{@PermissionStart}" or "{@PermissionAll}":
+				if GiveAll_gaExist(arg-2):
+					if contains(GiveAll_current(), arg-2) is not true:
+						set {_i} to false # {_i} définit si le giveall va se lancer instantanément ou pas.
+						set {_ga} to arg-2
+						add {_ga} to {ga::current::*}
+						set {ga::current::%{_ga}%::time} to 0
+						set {ga::current::%{_ga}%::status} to "Countdown"
+						set {ga::specs::%{_ga}%::status} to "Countdown"
+						set {ga::current::%{_ga}%::startExecutor} to player
+						set {ga::current::%{_ga}%::startDate} to now formatted with "{@dateFormat}"
+						set {_cd} to GiveAll_commandParams("cd", arg-3, arg-4, arg-5)
+						set {_t} to GiveAll_commandParams("t", arg-3, arg-4, arg-5)
+						set {_i} to ("%(""true"") if {_cd} is 0, else (""false"")%" parsed as boolean)
+						if {_i} is false: # S'il ne se lance pas instantanément, alors
+							set {_tl} to {ga::specs::%{_ga}%::countdown} # Algorythme compliqué pour faire le compte a rebours
+							if {_cd} is set:
+								set {_tl} to {_cd}
+							if {_tl} mod 10 != 0:
+								broadcast "{@Prefix} {@GAStartsInXSeconds}"
+								play sound "{@TimerSound}" at all players
+							while true:
+								if and(check [{_tl} mod 10 = 0], check [GiveAll_isInProgress({_ga})]):
+									broadcast "{@Prefix} {@GAStartsInXSeconds}"
+									play sound "{@TimerSound}" at all players
+								wait 1 second
+								remove 1 from {_tl}
+								if {_tl} < 10:
+									set {_tl} to 10
+									exit loop
+							remove 5 from {_tl}
+							wait 5 seconds
+							loop 5 times:
+								if GiveAll_isInProgress({_ga}):
+									broadcast "{@Prefix} {@GAStartsInXSeconds}"
+									play sound "{@TimerSound}" at all players
+									remove 1 from {_tl}
+									wait 1 second
+								else:
+									stop
+						if GiveAll_isInProgress({_ga}):
+							set {ga::current::%{_ga}%::status} to "In progress"
+							set {ga::specs::%{_ga}%::status} to "In progress"
+							broadcast "{@Prefix} {@GAStarts}"
+							play sound "{@TimerSound}" at all players
+							while GiveAll_isInProgress({_ga}):
+								loop all players:
+									if GiveAll_playerCanReceiveItems(loop-player, {_ga}):
+										set {_x} to a random element out of {ga::specs::%{_ga}%::items::*}
+										if {ga::specs::%{_ga}%::droptype} is "give":
+											give {_x} to loop-player
+										else if {ga::specs::%{_ga}%::droptype} is "drop":
+											set {_pos} to location at x-location of loop-player, y-location of loop-player+3, z-location of loop-player
+											if block at {_pos} is not air:
+												set {_pos} to location at x-location of loop-player, y-location of loop-player+1, z-location of loop-player
+											drop {_x} at {_pos}
+								loop random integer between {ga::debug::minGiveTime} and {ga::debug::maxGiveTime} times:
+									wait 1 second
+									add 1 to {ga::current::%{_ga}%::time}
+									if and(check [{_t} is not set], check [{ga::specs::%{_ga}%::time} != 0], check [{ga::current::%{_ga}%::time} >= {ga::specs::%{_ga}%::time}]):
+										broadcast "{@Prefix} {@GAIsFinish}"
+										set {ga::specs::%{_ga}%::status} to "Stopped"
+										clear {ga::current::%{_ga}%::*}
+										remove {_ga} from {ga::current::*}
+										stop
+									else if and(check [{_t} != 0], check [{ga::current::%{_ga}%::time} >= {_t}]):
+										broadcast "{@Prefix} {@GAIsFinish}"
+										set {ga::specs::%{_ga}%::status} to "Stopped"
+										clear {ga::current::%{_ga}%::*}
+										remove {_ga} from {ga::current::*}
+										stop
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@GAIsAlreadyStarted}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 						Stop 						  #
+		#-----------------------------------------------------#
+		else if arg-1 is "stop":
+			if player has permission "{@PermissionStop}" or "{@PermissionAll}":
+				if arg-2 is set:
+					if GiveAll_gaExist(arg-2):
+						set {_ga} to arg-2
+						if contains(GiveAll_current(), {_ga}):
+							GiveAll_stop({_ga})
+							broadcast "{@Prefix} {@GAHasBeenStopped}"
+						else:
+							message "{@Prefix} {@ErrorPrefix} {@NoGAInProgress}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_Stop}"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 						GiveHand 					  #
+		#-----------------------------------------------------#
+		else if arg-1 is "givehand" or "gh":
+			if player has permission "{@PermissionGiveHand}" or "{@PermissionAll}":
+				if player's tool is not air:
+					if amount of all players > 1:
+						if arg-2 is set:
+							set {_world} to arg-2
+						loop all players:
+							if loop-player is not player:
+								if {_world} is set:
+									if loop-player's world is {_world}:
+										give player's tool to loop-player
+								else:
+									give player's tool to loop-player
+						set {_item} to player's tool
+						set {_number} to amount of all players
+						message "{@Prefix} {@GAHandHasBeenGiven}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@Alone}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@TakeAnItem}"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 						Create 						  #
+		#-----------------------------------------------------#
+		else if arg-1 is "create" or "make":
+			if player has permission "{@PermissionCreate}" or "{@PermissionAll}":
+				if arg-2 is set:
+					if GiveAll_gaExist(arg-2) is not true:
+						set {_ga} to arg-2 # PlaceHolder pour le message
+						set {_time} to 0 # Durée du GiveAll
+						set {_cd} to 10 # Compte à rebours du GiveAll
+						if or(check [arg-3 is set], check [arg-4 is set]): # Si un argument est mis, alors on peut regarder si c'est le compte a rebours ou la durée
+							set {_cd} to GiveAll_commandParams("cd", arg-3, arg-4, "") # Compte a rebours
+							set {_time} to GiveAll_commandParams("t", arg-3, arg-4, "") # Durée
+						set {_date} to now formatted with "{@dateFormat}" # Date
+						GiveAll_newGiveAll(arg-2, "{@defaultGroup}", {_time}, {_cd}, "give", "%player%", {_date}, (diamond sword of sharpness 2 and 10 stone)) # Création du GiveAll
+						message "{@Prefix} {@GACreated}"
+						message "{@Prefix} {@GACreationInfosTime}"
+						message "{@Prefix} {@GACreationInfosCD}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@GaAlreadyExists}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_Create}"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 						Delete 						  #
+		#-----------------------------------------------------#
+		else if arg-1 is "delete" or "del" or "remove" or "rem":
+			if player has permission "{@PermissionDelete}" or "{@PermissionAll}":
+				if arg-2 is set:
+					if GiveAll_gaExist(arg-2):
+						if contains(GiveAll_current(), arg-2) is not true:
+							GiveAll_deleteGiveAll(arg-2)
+							set {_ga} to arg-2
+							message "{@Prefix} {@GADeleted}"
+						else:
+							message "{@Prefix} {@CantModifyBecauseGAIsInProgress}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_Delete}"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 						Purge 						  #
+		#-----------------------------------------------------#
+		else if arg-1 is "purge":
+			if player has permission "{@PermissionPurge}" or "{@PermissionAll}":
+				if GiveAll_isLastGiveAll() is not true:
+					set {_total} to size of {ga::list::*}
+					if {ga::player::%player%::purge}:
+						clear {ga::player::%player%::purge}
+						GiveAll_purgeGiveAll()
+						message "{@Prefix} {@SuccessfullyPurged}"
+					else:
+						set {ga::player::%player%::purge} to true
+						message "{@Prefix} {@PleaseConfirmPurge}"
+						wait {@purgeConfirmExpire} seconds
+						clear {ga::player::%player%::purge}
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@GAListIsEmpty}"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 						Rename 						  #
+		#-----------------------------------------------------#
+		else if arg-1 is "rename":
+			if player has permission "{@PermissionRename}" or "{@PermissionAll}":
+				if GiveAll_gaExist(arg-2):
+					set {_ga} to arg-2
+					set {_newName} to arg-3
+					if GiveAll_gaExist(arg-3) is not true:
+						if contains(GiveAll_current(), arg-2) is not true:
+							GiveAll_renameGiveAll(arg-2, arg-3)
+							message "{@Prefix} {@RenamedSuccessfully}"
+						else:
+							message "{@Prefix} {@ErrorPrefix} {@CantModifyBecauseGAIsInProgress}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@NewGAAlreadyExists}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 						List 						  #
+		#-----------------------------------------------------#
+		else if arg-1 is "list":
+			if player has permission "{@PermissionChatList}" or "{@PermissionGUIList}" or "{@PermissionAll}":
+				set {_number} to size of {ga::list::*}
+				set {_gnum} to size of {ga::glist::*}
+				if and(check [{_number} = 0], check [{_gnum} = 0]):
+					message "{@Prefix} {@GAListIsEmpty}"
+				else if arg-2 is "gui":
+					if player has permission "{@PermissionGUIList}" or "{@PermissionAll}":
+						if arg-3 is not set:
+							set {_p} to 1
+						else:
+							set {_p} to arg-3 parsed as integer
+						if {_p} is not an integer:
+							set {_p} to 1
+						else:
+							set {_p} to abs({_p})
+						set {_mp} to ceil(size of {ga::list::*} / 36)
+						if {_mp} is 0:
+							set {_mp} to 1
+						if {_p} > {_mp}:
+							make player execute command "/{@MainCommand} list gui %{_mp}%"
+							stop
+						open virtual chest with 6 rows named "{@TitleGUIList}" to player
+						set {_i} to 0
+						set {_d} to {ga::player::%player%::dispMode}
+						if {_d} is "GroupsAndGa" or "allFullGroups" or "onlyGroup":
+							loop {ga::glist::*}:
+								set {_grp} to loop-value
+								set {_s} to size of {ga::gspecs::%{_grp}%::givealls::*}
+								if {_d} is "allFullGroups":
+									if {_s} is 0:
+										continue
+									if {_s} is not set:
+										continue
+								if {_i} >= {_p} * 36 - 36:
+									if {_i} < {_p} * 36:
+										loop {ga::gspecs::%{_grp}%::givealls::*}:
+											set {_dispInGroup::%loop-value-2%} to true # On ajoute le GiveAll à une liste, pour après éviter de l'afficher en dehors des groupes
+										set {_nbga} to size of {ga::gspecs::%{_grp}%::givealls::*}
+										set {_cd} to {ga::gspecs::%{_grp}%::countdown}
+										set {_time} to {ga::gspecs::%{_grp}%::time}
+										set {_creator} to {ga::gspecs::%{_grp}%::infos::creator}
+										set {_date} to {ga::gspecs::%{_grp}%::infos::date}
+										set {_action} to "{@LeftClickActionStartGroup}"
+										loop {ga::gspecs::%{_grp}%::givealls::*}:
+											if size of {ga::specs::%loop-value-2%::items::*} is 0:
+												set {_action} to "{@LeftClickActionCantStartItemGroup}"
+										if {_s} is 0:
+											set {_action} to "{@LeftClickActionCantStartGAGroup}"
+										set {_l} to "{@LoreGAListGroup}"
+										set {_lore::*} to {_l} split at "||"
+										#if {_action} is "{@LeftClickActionStartGroup}":
+										# Middle click / Lancer
+										format gui slot {_i} - 36 * ({_p} - 1) of player with a book named "{@GAListItemGroup}" with lore {_lore::*} to run function GiveAll_listOptionsGUI(player, "grp", "middle", "%loop-value%") with middle mouse button
+										# Right click / Supprimer avec confirmation
+										format gui slot {_i} - 36 * ({_p} - 1) of player with a book named "{@GAListItemGroup}" with lore {_lore::*} to run function GiveAll_listOptionsGUI(player, "grp", "droit", "%loop-value%") with right mouse button
+										# Shift right click / Supprimer sans confirmation
+										format gui slot {_i} - 36 * ({_p} - 1) of player with a book named "{@GAListItemGroup}" with lore {_lore::*} to run function GiveAll_listOptionsGUI(player, "grp", "shiftdroit", "%loop-value%") with right mouse button with shift
+										# Left click / Gérer le contenu
+										format gui slot {_i} - 36 * ({_p} - 1) of player with a book named "{@GAListItemGroup}" with lore {_lore::*} to run function GiveAll_listOptionsGUI(player, "grp", "gauche", "%loop-value%") with left mouse button
+								add 1 to {_i}
+						if {_d} is not "onlyGroup":
+							loop {ga::list::*}:
+								if {_d} is "GroupsAndGa": # Si on affiche par groupe...
+									if {_dispInGroup::%loop-value%}:
+										continue
+								if {_i} >= {_p} * 36 - 36:
+									if {_i} < {_p} * 36:
+										set {_ga} to loop-value
+										set {_nbitem} to size of {ga::specs::%{_ga}%::items::*}
+										set {_time} to "%{ga::specs::%{_ga}%::time}%"
+										set {_cd} to {ga::specs::%{_ga}%::countdown}
+										set {_conds} to GiveAll_activeConditions({_ga})
+										set {_creator} to {ga::specs::%{_ga}%::infos::creator}
+										set {_date} to {ga::specs::%{_ga}%::infos::date}
+										set {_statut} to "{@StatusStop}"
+										set {_action} to "{@LeftClickActionCantStart}"
+										if {ga::specs::%{_ga}%::status} is "Countdown":
+											set {_action} to "{@LeftClickActionStop}"
+											set {_statut} to "{@StatusInCountDown}"
+										else if {ga::specs::%{_ga}%::status} is "In Progress":
+											set {_action} to "{@LeftClickActionStop}"
+											set {_statut} to "{@StatusInProgress}"
+										else if size of {ga::specs::%{_ga}%::items::*} > 0:
+											set {_action} to "{@LeftClickActionStart}"
+										if {ga::specs::%{_ga}%::time} is 0:
+											set {_time} to "{@InfiniteTimeForGUIList}"
+										set {_blacklist} to 0
+										if size of {ga::specs::%{_ga}%::blacklist::*} > 0:
+											set {_blacklist} to size of {ga::specs::%{_ga}%::blacklist::*}
+										set {_l} to "{@LoreGAList}"
+										set {_lore::*} to {_l} split at "||"
+										if {_action} is "{@LeftClickActionStop}" or "{@LeftClickActionStart}":
+											format gui slot {_i} - 36 * ({_p} - 1) of player with a paper named "{@GAListItem}" with lore {_lore::*} to run function GiveAll_listOptionsGUI(player, "ga", "gauche", "%loop-value%") with left mouse button
+										format gui slot {_i} - 36 * ({_p} - 1) of player with a paper named "{@GAListItem}" with lore {_lore::*} to run function GiveAll_listOptionsGUI(player, "ga", "droit", "%loop-value%") with right mouse button
+										format gui slot {_i} - 36 * ({_p} - 1) of player with a paper named "{@GAListItem}" with lore {_lore::*} to run function GiveAll_listOptionsGUI(player, "ga", "shiftdroit", "%loop-value%") with right mouse button with shift
+										format gui slot {_i} - 36 * ({_p} - 1) of player with a paper named "{@GAListItem}" with lore {_lore::*} to run function GiveAll_listOptionsGUI(player, "ga", "middle", "%loop-value%") with middle mouse button
+										format gui slot {_i} - 36 * ({_p} - 1) of player with a paper named "{@GAListItem}" with lore {_lore::*} to run function GiveAll_listOptionsGUI(player, "ga", "shiftgauche", "%loop-value%") with left mouse button with shift
+								add 1 to {_i}
+						set {_l1} to "{@ToggleDisplayModeGroupAndGiveall}"
+						set {_l2} to "{@ToggleDisplayModeOnlyGroups}"
+						set {_l3.1} to "{@ToggleDisplayModeOnlyFullGroupsAndGiveall1}"
+						set {_l3.2} to "{@ToggleDisplayModeOnlyFullGroupsAndGiveall2}"
+						set {_l4} to "{@ToggleDisplayModeOnlyGiveall}"
+						format gui slot 45 of player with a book named "{@ToggleDisplayModeInGuiListName}" with lore "", "%(""&2"") if {_d} is ""GroupsAndGa"", else (""&7"")%%{_l1}%", "%(""&2"") if {_d} is ""onlyGroup"", else (""&7"")%%{_l2}%", "%(""&2"") if {_d} is ""allFullGroups"", else (""&7"")%%{_l3.1}%", "%(""&2"") if {_d} is ""allFullGroups"", else (""&7"")%%{_l3.2}%" and "%(""&2"") if {_d} is ""onlyGiveAll"", else (""&7"")%%{_l4}%" to run with right mouse button:
+							if {ga::player::%player%::dispMode} is "onlyGroup":
+								set {ga::player::%player%::dispMode} to "GroupsAndGa"
+							else if {ga::player::%player%::dispMode} is "allFullGroups":
+								set {ga::player::%player%::dispMode} to "onlyGroup"
+							else if {ga::player::%player%::dispMode} is "onlyGiveAll":
+								set {ga::player::%player%::dispMode} to "allFullGroups"
+							else if {ga::player::%player%::dispMode} is "GroupsAndGa":
+								set {ga::player::%player%::dispMode} to "onlyGiveAll"
+							make player execute command "/{@MainCommand} list gui %{_p}%"
+						format gui slot 45 of player with a book named "{@ToggleDisplayModeInGuiListName}" with lore "", "%(""&2"") if {_d} is ""GroupsAndGa"", else (""&7"")%%{_l1}%", "%(""&2"") if {_d} is ""onlyGroup"", else (""&7"")%%{_l2}%", "%(""&2"") if {_d} is ""allFullGroups"", else (""&7"")%%{_l3.1}%", "%(""&2"") if {_d} is ""allFullGroups"", else (""&7"")%%{_l3.2}%" and "%(""&2"") if {_d} is ""onlyGiveAll"", else (""&7"")%%{_l4}%" to run with left mouse button:
+							if {ga::player::%player%::dispMode} is "GroupsAndGa":
+								set {ga::player::%player%::dispMode} to "onlyGroup"
+							else if {ga::player::%player%::dispMode} is "onlyGroup":
+								set {ga::player::%player%::dispMode} to "allFullGroups"
+							else if {ga::player::%player%::dispMode} is "allFullGroups":
+								set {ga::player::%player%::dispMode} to "onlyGiveAll"
+							else if {ga::player::%player%::dispMode} is "onlyGiveAll":
+								set {ga::player::%player%::dispMode} to "GroupsAndGa"
+							make player execute command "/{@MainCommand} list gui %{_p}%"
+						if {_p} != {_mp}:
+							format gui slot 50 of player with an arrow named "{@NextPage}" to run player command "/{@MainCommand} list gui %({_p} + 1)%"
+						if {_p} != 1:
+							format gui slot 48 of player with an arrow named "{@PreviousPage}" to run player command "/{@MainCommand} list gui %({_p} - 1)%"
+						format gui slot 49 of player with name tag named "{@InfoPageItem}" with lore "{@LoreInfoPageItem}"
+						format gui slot 36, 38, 40, 42 and 44 of player with white glass pane named "&r"
+						format gui slot 37, 39, 41 and 43 of player with blue glass pane named "&r"
+						format gui slot 53 of player with a barrier named "{@CloseGUIItem}" to close
+					else:
+						message "{@NoPermission}"
+				else:
+					set {_gal} to ""
+					set {_i} to 1
+					loop {ga::list::*}:
+						set {_ga} to "{@GAColorInList}%loop-value%"
+						if contains(GiveAll_current(), loop-value):
+							set {_ga} to "{@GAColorInList}{@GAColorInListIfInProgress}%loop-value%"
+						set {_gal} to "%{_gal}%%(""{@ComaColorInList}, "") if {_i} is not 1, else ("""")%%{_ga}%"
+						add 1 to {_i}
+					message "{@Prefix} {@GAList} %{_gal}%"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 						Info 						  #
+		#-----------------------------------------------------#
+		else if arg-1 is "info" or "infos" or "information" or "informations":
+			if player has permission "{@PermissionInfo}" or "{@PermissionAll}":
+				if arg-2 is set:
+					if GiveAll_gaExist(arg-2):
+						set {_ga} to arg-2
+						message "{@Prefix} {@InfoHeader}"
+						#set {_a} to 
+						message "{@Prefix} {@ComaColorInList}Durée :{@GAColorInList} %({@InfiniteTimeForGUIList}) if {ga::specs::%{_ga}%::time} is 0 else {ga::specs::%{_ga}%::time}%"
+						message "{@Prefix} {@ComaColorInList}Compte à rebours :{@GAColorInList} %{ga::specs::%{_ga}%::countdown}% secs"
+						message "{@Prefix} {@ComaColorInList}Don des items :{@GAColorInList} %{ga::specs::%{_ga}%::droptype}%"
+						set {_a} to ("aucun") if {ga::specs::%{_ga}%::group} is "{@defaultGroup}" else "%{ga::specs::%{_ga}%::group}%"
+						message "{@Prefix} {@ComaColorInList}Groupe :{@GAColorInList} %{_a}%"
+						set {_statut} to "{@StatusStop}"
+						if {ga::specs::%{_ga}%::status} is "Countdown":
+							set {_statut} to "{@StatusInCountDown}"
+						else if {ga::specs::%{_ga}%::status} is "In Progress":
+							set {_statut} to "{@StatusInProgress}"
+						message "{@Prefix} {@ComaColorInList}Statut :{@GAColorInList} %{_statut}%"
+						message "{@Prefix} {@ComaColorInList}Créateur :{@GAColorInList} %{ga::specs::%{_ga}%::infos::creator}%"
+						message "{@Prefix} {@ComaColorInList}Création :{@GAColorInList} %{ga::specs::%{_ga}%::infos::date}%"
+						set {_cond} to ""
+						loop {ga::specs::%{_ga}%::conditions::*}:
+							if {ga::specs::%{_ga}%::conditions::%loop-value%::isEnable}:
+								set {_cond} to "%{_cond}%, %{ga::debug::conds::%loop-value%::fullName}%"
+						set {_a} to ("aucune") if {_cond} is "" else "%{_cond}%"
+						message "{@Prefix} {@ComaColorInList}Conditions :{@GAColorInList} %{_a}%"
+						message "{@Prefix} {@ComaColorInList}Items :{@GAColorInList} <tooltip:&7%{ga::specs::%{_ga}%::items::*}%>%size of {ga::specs::%{_ga}%::items::*}%<reset>"
+
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_Info}"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 						Add 						  #
+		#-----------------------------------------------------#
+		else if arg-1 is "add" or "addi" or "additem" or "additems":
+			if player has permission "{@PermissionAddItem}" or "{@PermissionAll}":
+				if arg-2 is set:
+					if GiveAll_gaExist(arg-2):
+						if player's tool is not air:
+							add player's tool to {ga::specs::%arg-2%::items::*}
+							set {_ga} to arg-2
+							set {_item} to player's tool
+							message "{@Prefix} {@ItemAdded}"
+						else:
+							message "{@Prefix} {@ErrorPrefix} {@TakeAnItem}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_Add}"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 						Edit 						  #
+		#-----------------------------------------------------#
+		else if arg-1 is "edit" or "edititems" or "edititem":
+			if player has permission "{@PermissionEditItem}" or "{@PermissionAll}":
+				if arg-2 is set:
+					if GiveAll_gaExist(arg-2):
+						set {_ga} to arg-2
+						if arg-3 is not set:
+							set {_p} to 1
+						else:
+							set {_p} to arg-3 parsed as integer
+						if {_p} is not an integer:
+							set {_p} to 1
+						else:
+							set {_p} to abs({_p})
+						set {_mp} to ceil(size of {ga::specs::%{_ga}%::items::*} / 36)
+						if {_mp} is 0:
+							set {_mp} to 1
+						if {_p} > {_mp}:
+							make player execute command "/{@MainCommand} edititems %{_ga}% %{_mp}%"
+							stop
+						set {ga::player::%player%::editingItems} to "%{_ga}%"
+						open virtual chest with 6 rows named "{@EditItems}" to player
+						set {_in} to 0
+						loop {ga::specs::%{_ga}%::items::*}:
+							if {_in} >= {_p} * (36) - 36:
+								if {_in} < {_p} * 36:
+									set {_i} to loop-value
+									format gui slot {_in} - 36 * ({_p} - 1) of player with loop-value to run with right mouse button:
+										GiveAll_removeItem({_ga}, {_i})
+										wait 1 tick
+										make player execute command "/{@MainCommand} edititems %{_ga}% %{_p}%"
+							add 1 to {_in}
+						if {_p} != {_mp}:
+							format gui slot 50 of player with an arrow named "{@NextPage}" to run player command "/{@MainCommand} edititems %{_ga}% %({_p} + 1)%"
+						if {_p} != 1:
+							format gui slot 48 of player with an arrow named "{@PreviousPage}" to run player command "/{@MainCommand} edititems %{_ga}% %({_p} - 1)%"
+						format gui slot 36, 38, 40, 42 and 44 of player with white glass pane named "&r"
+						format gui slot 37, 39, 41 and 43 of player with blue glass pane named "&r"
+						format gui slot 53 of player with a barrier named "{@CloseGUIItem}" to close
+						if player has permission "{@PermissionGUIList}" or "{@PermissionAll}":
+							format gui slot 45 of player with a paper named "{@BackItem}" to run player command "/{@MainCommand} list gui"
+						if player has permission "{@PermissionClearGA}" or "{@PermissionAll}":
+							format gui slot 51 of player with a redstone dust item named "{@ClearGA}" to run:
+								make player execute command "/{@MainCommand} clear %{_ga}%"
+								wait 1 tick
+								make player execute command "/{@MainCommand} edititems %{_ga}% %{_p}%"
+						if player has permission "{@PermissionAddItem}" or "{@PermissionAll}":
+							format gui slot 49 of player with gold block named "{@AddItemToGA}" to run:
+								if gui-cursor is an item:
+									if gui-cursor is not air:
+										set {ga::player::%player%::dropToAdd} to true
+										add gui-cursor to {ga::specs::%{_ga}%::items::*}
+										make player execute command "/{@MainCommand} edititems %{_ga}% %{_p}%"
+										clear {ga::player::%player%::dropToAdd}
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_EditItem}"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 						Modify 						  #
+		#-----------------------------------------------------#
+		else if arg-1 is "modify":
+			if player has permission "{@PermissionModify}" or "{@PermissionAll}":
+				if arg-2 is set:
+					if GiveAll_gaExist(arg-2):
+						set {_ga} to arg-2
+						open virtual chest with 6 rows named "{@ModifyGA}" to player
+						format gui slot 4 of player with a book named "{@InfoGAName}"
+						format gui slot 10 of player with a red glass pane named "{@NotEnoughPermissionInGUI}"
+						if player has permission "{@PermissionDuplicate}" or "{@PermissionAll}":
+							format gui slot 10 of player with a name tag named "{@GAModifyDuplicate}" to run:
+								make player execute command "/{@MainCommand} duplicate %{_ga}%"
+						format gui slot 11 of player with a red glass pane named "{@NotEnoughPermissionInGUI}"
+						if player has permission "{@PermissionRename}" or "{@PermissionAll}":
+							format gui slot 11 of player with a book and quill named "{@GAModifyRename}" to run:
+								close player's inventory
+								message "&r%nl%&r%nl%<tooltip:{@TTPClickForAction}><suggest command:/ga rename %{_ga}% MonNouveauGiveAll>{@Prefix} <tooltip:{@TTPClickForAction}><suggest command:/ga rename %{_ga}% MonNouveauGiveAll>{@MSGClickForAction}&r%nl%&r%nl%&r"
+						format gui slot 12 of player with a red glass pane named "{@NotEnoughPermissionInGUI}"
+						if player has permission "{@PermissionEditItem}" or "{@PermissionAll}":
+							format gui slot 12 of player with a grass block named "{@GAEditItems}" to run:
+								make player execute command "/{@MainCommand} edititem %{_ga}% 1"
+						format gui slot 13 of player with a red glass pane named "{@NotEnoughPermissionInGUI}"
+						if player has permission "{@PermissionModifyCondition}" or "{@PermissionAll}":
+							format gui slot 13 of player with iron bar named "{@ModifyCondition}" to run function GiveAll_conditionGUI(player, "%{_ga}%", true)
+						format gui slot 14 of player with a red glass pane named "{@NotEnoughPermissionInGUI}"
+						if player has permission "{@PermissionDelete}" or "{@PermissionAll}":
+							format gui slot 14 of player with a tnt named "{@DeleteInModifyGUI}" to run function GiveAll_confirmDeleteGUI(player, "ga", "%{_ga}%", "modify %{_ga}%")
+						format gui slot 15 of player with a red glass pane named "{@NotEnoughPermissionInGUI}"
+						if contains(GiveAll_current(), {_ga}) is true:
+							if player has permission "{@PermissionStop}" or "{@PermissionAll}":
+								format gui slot 15 of player with a redstone block named "{@LeftClickActionStop}" to run:
+									make player execute command "/{@MainCommand} stop %{_ga}%"
+									wait 3 ticks
+									make player execute command "/{@MainCommand} modify %{_ga}%"
+						else if player has permission "{@PermissionStart}" or "{@PermissionAll}":
+							format gui slot 15 of player with a emerald block named "{@LeftClickActionStart}" to run:
+								make player execute command "/{@MainCommand} start %{_ga}%"
+								wait 3 ticks
+								make player execute command "/{@MainCommand} modify %{_ga}%"
+						format gui slot 16 of player with a red glass pane named "{@NotEnoughPermissionInGUI}"
+						if player has permission "{@PermissionChangeDropType}" or "{@PermissionAll}":
+							set {_drop} to {ga::specs::%{_ga}%::droptype}
+							format gui slot 16 of player with a feather named "{@GAModifyChangeDropType}" with lore "{@GAModifyChangeDropTypeLore}" to run:
+								if {ga::specs::%{_ga}%::droptype} is "give":
+									make player execute command "/{@MainCommand} drop %{_ga}% drop"
+								else:
+									make player execute command "/{@MainCommand} drop %{_ga}% give"
+								wait 3 ticks
+								make player execute command "/{@MainCommand} modify %{_ga}%"
+						format gui slot 28, 29, 30, 31, 32, 33 and 34 of player with a red glass pane named "{@NotEnoughPermissionInGUI}"
+						if player has permission "{@PermissionChangeTime}" or "{@PermissionAll}":
+							set {_time} to "&4&l60&r"
+							format gui slot 28 of player with 60 of black wool named "{@RemoveTimeByGUI}" to run:
+								remove 60 from {ga::specs::%{_ga}%::time}
+								if {ga::specs::%{_ga}%::time} < 0:
+									set {ga::specs::%{_ga}%::time} to 0
+								wait 1 ticks
+								make player execute command "/{@MainCommand} modify %{_ga}%"
+							set {_time} to "&c&l10&r"
+							format gui slot 29 of player with 10 of red wool named "{@RemoveTimeByGUI}" to run:
+								remove 10 from {ga::specs::%{_ga}%::time}
+								if {ga::specs::%{_ga}%::time} < 0:
+									set {ga::specs::%{_ga}%::time} to 0
+								wait 1 ticks
+								make player execute command "/{@MainCommand} modify %{_ga}%"
+							set {_time} to "&6&l1&r"
+							format gui slot 30 of player with 1 of orange wool named "{@RemoveTimeByGUI}" to run:
+								remove 1 from {ga::specs::%{_ga}%::time}
+								if {ga::specs::%{_ga}%::time} < 0:
+									set {ga::specs::%{_ga}%::time} to 0
+								wait 1 ticks
+								make player execute command "/{@MainCommand} modify %{_ga}%"
+							set {_time} to {ga::specs::%{_ga}%::time}
+							set {_l} to "{@LoreSeeTimeByGUI}"
+							set {_lore::*} to {_l} split at "||"
+							format gui slot 31 of player with a clock item named "{@SeeTimeByGUI}" with lore {_lore::*} to run with right mouse button:
+								set {ga::specs::%{_ga}%::time} to 0
+								wait 1 ticks
+								make player execute command "/{@MainCommand} modify %{_ga}%"
+							set {_time} to "&e&l1&r"
+							format gui slot 32 of player with 1 of yellow wool named "{@AddTimeByGUI}" to run:
+								add 1 to {ga::specs::%{_ga}%::time}
+								wait 1 ticks
+								make player execute command "/{@MainCommand} modify %{_ga}%"
+							set {_time} to "&a&l10&r"
+							format gui slot 33 of player with 10 of light green wool named "{@AddTimeByGUI}" to run:
+								add 10 to {ga::specs::%{_ga}%::time}
+								wait 1 ticks
+								make player execute command "/{@MainCommand} modify %{_ga}%"
+							set {_time} to "&2&l60&r"
+							format gui slot 34 of player with 60 of green wool named "{@AddTimeByGUI}" to run:
+								add 60 to {ga::specs::%{_ga}%::time}
+								wait 1 ticks
+								make player execute command "/{@MainCommand} modify %{_ga}%"
+
+
+						format gui slot 37, 38, 39, 40, 41, 42 and 43 of player with a red glass pane named "{@NotEnoughPermissionInGUI}"
+						if player has permission "{@PermissionChangeCountDown}" or "{@PermissionAll}":
+							set {_time} to "&4&l10&r"
+							format gui slot 37 of player with 10 of black wool named "{@RemoveCDByGUI}" to run:
+								remove 10 from {ga::specs::%{_ga}%::countdown}
+								if {ga::specs::%{_ga}%::countdown} < 10:
+									set {ga::specs::%{_ga}%::countdown} to 10
+								wait 1 ticks
+								make player execute command "/{@MainCommand} modify %{_ga}%"
+							set {_time} to "&c&l5&r"
+							format gui slot 38 of player with 5 of red wool named "{@RemoveCDByGUI}" to run:
+								remove 5 from {ga::specs::%{_ga}%::countdown}
+								if {ga::specs::%{_ga}%::countdown} < 10:
+									set {ga::specs::%{_ga}%::countdown} to 10
+								wait 1 ticks
+								make player execute command "/{@MainCommand} modify %{_ga}%"
+							set {_time} to "&6&l1&r"
+							format gui slot 39 of player with 1 of orange wool named "{@RemoveCDByGUI}" to run:
+								remove 1 from {ga::specs::%{_ga}%::countdown}
+								if {ga::specs::%{_ga}%::countdown} < 10:
+									set {ga::specs::%{_ga}%::countdown} to 10
+								wait 1 ticks
+								make player execute command "/{@MainCommand} modify %{_ga}%"
+							set {_time} to {ga::specs::%{_ga}%::countdown}
+							set {_l} to "{@LoreSeeCDByGUI}"
+							set {_lore::*} to {_l} split at "||"
+							format gui slot 40 of player with a clock item named "{@SeeCDByGUI}" with lore {_lore::*} to run with right mouse button:
+								set {ga::specs::%{_ga}%::countdown} to 10
+								wait 1 ticks
+								make player execute command "/{@MainCommand} modify %{_ga}%"
+							set {_time} to "&e&l1&r"
+							format gui slot 41 of player with 1 of yellow wool named "{@AddCDByGUI}" to run:
+								add 1 to {ga::specs::%{_ga}%::countdown}
+								wait 1 ticks
+								make player execute command "/{@MainCommand} modify %{_ga}%"
+							set {_time} to "&2&l5&r"
+							format gui slot 42 of player with 5 of light green wool named "{@AddCDByGUI}" to run:
+								add 5 to {ga::specs::%{_ga}%::countdown}
+								wait 1 ticks
+								make player execute command "/{@MainCommand} modify %{_ga}%"
+							set {_time} to "&a&l10&r"
+							format gui slot 43 of player with 10 of green wool named "{@AddCDByGUI}" to run:
+								add 10 to {ga::specs::%{_ga}%::countdown}
+								wait 1 ticks
+								make player execute command "/{@MainCommand} modify %{_ga}%"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_Modify}"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 					   DropType						  #
+		#-----------------------------------------------------#
+		else if arg-1 is "drop" or "droptype" or "changedroptype":
+			if player has permission "{@PermissionChangeDropType}" or "{@PermissionAll}":
+				if arg-2 is set:
+					if GiveAll_gaExist(arg-2):
+						set {_ga} to arg-2
+						#set {_drop} to {ga::specs::%{_ga}%::droptype}
+						if arg-3 is set:
+							if arg-3 is "drop" or "give":
+								GiveAll_setDropType({_ga}, arg-3)
+								set {_drop} to {ga::specs::%{_ga}%::droptype}
+								message "{@Prefix} {@SuccessfullyChangedDropType}"
+							else:
+								message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_DropType}"
+						else:
+							message "{@Prefix} {@DropTypeInfo}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_DropType}"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 					   Settime 						  #
+		#-----------------------------------------------------#
+		else if arg-1 is "settime" or "setime" or "changetime" or "changet" or "ctime" or "ct":
+			if player has permission "{@PermissionChangeTime}" or "{@PermissionAll}":
+				if arg-2 is set:
+					if GiveAll_gaExist(arg-2):
+						if contains(GiveAll_current(), arg-2) is not true:
+							if arg-3 is set:
+								set {_time} to arg-3 parsed as integer
+								if {_time} is an integer:
+									set {_time} to abs({_time})
+									set {ga::specs::%arg-2%::time} to {_time}
+									set {_ga} to arg-2
+									message "{@Prefix} {@SuccessfullyChangedTime}"
+								else:
+									message "{@Prefix} {@ErrorPrefix} {@InvalidNumber}"
+							else:
+								message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_ChangeTime}"
+						else:
+							message "{@Prefix} {@CantModifyBecauseGAIsInProgress}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_ChangeTime}"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 					  SetCountdown 					  #
+		#-----------------------------------------------------#
+		else if arg-1 is "setcountdown" or "setcd" or "scd" or "changecountdown" or "changecd" or "ccd":
+			if player has permission "{@PermissionChangeCountDown}" or "{@PermissionAll}":
+				if arg-2 is set:
+					if GiveAll_gaExist(arg-2):
+						if contains(GiveAll_current(), arg-2) is not true:
+							if arg-3 is set:
+								set {_time} to arg-3 parsed as integer
+								if {_time} is an integer:
+									set {_time} to abs({_time})
+									if {_time} >= 10:
+										set {ga::specs::%arg-2%::countdown} to {_time}
+										set {_ga} to arg-2
+										message "{@Prefix} {@SuccessfullyChangedCD}"
+									else:
+										message "{@Prefix} {@ErrorPrefix} {@TimeForCDIsTooSmall}"
+								else:
+									message "{@Prefix} {@ErrorPrefix} {@InvalidNumber}"
+							else:
+								message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_ChangeCD}"
+						else:
+							message "{@Prefix} {@CantModifyBecauseGAIsInProgress}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_ChangeCD}"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 					   CopyItem 					  #
+		#-----------------------------------------------------#
+		else if arg-1 is "copyitem" or "copycontent" or "copy":
+			if player has permission "{@PermissionCopyContent}" or "{@PermissionAll}":
+				if arg-2 is set:
+					if arg-3 is set:
+						if GiveAll_gaExist(arg-2):
+							if GiveAll_gaExist(arg-3):
+								if size of {ga::specs::%arg-2%::items::*} is not 0:
+									set {_ga1} to arg-2
+									set {_ga2} to arg-3
+									GiveAll_copyItems(arg-2, arg-3)
+									message "{@Prefix} {@SuccessfullyCopied}"
+								else:
+									message "{@Prefix} {@ErrorPrefix} {@GAIsEmpty}"
+							else:
+								message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+						else:
+							message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_CopyContent}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_CopyContent}"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 					   Duplicate 					  #
+		#-----------------------------------------------------#
+		else if arg-1 is "duplicate":
+			if player has permission "{@PermissionDuplicate}" or "{@PermissionAll}":
+				if arg-2 is set:
+					if GiveAll_gaExist(arg-2):
+						set {_ga} to arg-2
+						set {_gaNew} to "%{_ga}%-{@DuplicatedGAdefaultName}"
+						if GiveAll_gaExist({_gaNew}):
+							set {_s} to 2
+							while GiveAll_gaExist({_gaNew}):
+								set {_gaNew} to "%{_ga}%-{@DuplicatedGAdefaultName}%{_s}%"
+								add 1 to {_s}
+						set {_date} to now formatted with "{@dateFormat}"
+						GiveAll_newGiveAll({_gaNew}, {ga::specs::%{_ga}%::group}, {ga::specs::%{_ga}%::time}, {ga::specs::%{_ga}%::countdown}, {ga::specs::%{_ga}%::droptype}, {_date}, {ga::specs::%{_ga}%::infos::creator}, {ga::specs::%{_ga}%::items::*})
+						message "{@Prefix} {@SuccessfullyDuplicated}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_Duplicate}"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 					   Clear 						  #
+		#-----------------------------------------------------#
+		else if arg-1 is "clear":
+			if player has permission "{@PermissionClearGA}" or "{@PermissionAll}":
+				if arg-2 is set:
+					if GiveAll_gaExist(arg-2):
+						if contains(GiveAll_current(), arg-2) is not true:
+							clear {ga::specs::%arg-2%::items::*}
+							set {_ga} to arg-2
+							message "{@Prefix} {@SuccessfullyCleared}"
+						else:
+							message "{@Prefix} {@CantModifyBecauseGAIsInProgress}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_Clear}"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 					   Condition					  #
+		#-----------------------------------------------------#
+		else if arg-1 is "condition" or "cond" or "conditions":
+			if arg-2 is set:
+				if arg-2 is "list" or "all":
+					if player has permission "{@PermissionModifyCondition}" or "{@PermissionAll}":
+						set {_number} to ((size of {ga::debug::conds::*}) / 2)
+						message "{@Prefix} {@ConditionsList}"
+						loop {ga::debug::conds::*}:
+							message "{@Prefix} {@ComaColorInList}  -{@GAColorInList} <tooltip:{@GAColorInList}%{ga::debug::conds::%loop-value%::fullName}%%nl%&7%{ga::debug::conds::%loop-value%::description}%>%loop-value%"
+					else:
+						message "{@NoPermission}"
+				else if arg-2 is "see" or "info" :
+					if player has permission "{@PermissionSeeCondition}" or "{@PermissionAll}":
+						if arg-3 is set:
+							if GiveAll_gaExist(arg-3):
+								set {_ga} to arg-3
+								if arg-4 is "gui":
+									GiveAll_conditionGUI(player, {_ga})
+								else:
+									loop {ga::specs::%{_ga}%::conditions::*}:
+										if {ga::specs::%{_ga}%::conditions::%loop-value%::isEnable}:
+											add 1 to {_c}
+									if {_c} >= 1:
+										message "{@Prefix} {@SeeCondInfo}"
+										loop {ga::specs::%{_ga}%::conditions::*}:
+											set {_cond} to loop-value
+											if {ga::specs::%{_ga}%::conditions::%{_cond}%::isEnable}:
+												set {_c} to {ga::specs::%{_ga}%::conditions::%{_cond}%::fullName}
+												set {_v} to {ga::specs::%{_ga}%::conditions::%{_cond}%::value}
+												set {_d} to {ga::specs::%{_ga}%::conditions::%{_cond}%::description}
+												message "{@Prefix} <tooltip:{@SeeCondTooltip}>{@SeeCond}"
+									else:
+										message "{@Prefix} {@ErrorPrefix} {@NoConditionSet}"
+							else:
+								message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+						else:
+							message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_Condition}"
+					else:
+						message "{@NoPermission}"
+				else if arg-2 is "set":
+					if player has permission "{@PermissionModifyCondition}" or "{@PermissionAll}":
+						if check [arg-3 is set]->[arg-4 is set]->[arg-5 is set]:
+							if GiveAll_gaExist(arg-3):
+								set {_ga} to arg-3
+								set {_cond} to arg-4
+								set {_val} to arg-5
+								if {_cond} is "in-region" or "not-in-region":
+									set {_val} to ({_val} in lower case)
+								if {_cond} is "min-co" or "max-co":
+									if ({_val} parsed as integer) is not an integer:
+										message "{@Prefix} {@ErrorPrefix} {@TimeIsInvalid}"
+										stop
+								loop {ga::debug::conds::*}:
+									if loop-value is {_cond}:
+										GiveAll_addCondition({_ga}, {_cond}, {_val})
+										set {_cond} to {ga::specs::%{_ga}%::conditions::%{_cond}%::fullName}
+										message "{@Prefix} {@ConditionSet}"
+										stop
+								message "{@Prefix} {@ErrorPrefix} {@WrongCondition}"
+							else:
+								message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+						else:
+							message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_Condition}"
+					else:
+						message "{@NoPermission}"
+				else if arg-2 is "remove" or "rem" or "delete" or "del":
+					if player has permission "{@PermissionModifyCondition}" or "{@PermissionAll}":
+						if check [arg-3 is set]->[arg-4 is set]:
+							if GiveAll_gaExist(arg-3):
+								set {_ga} to arg-3
+								set {_cond} to arg-4
+								if {_cond} is "all":
+									loop {ga::debug::conds::*}:
+										GiveAll_removeCondition({_ga}, "%loop-value%")
+									message "{@Prefix} {@ConditionCleared}"
+									stop
+								else:
+									loop {ga::debug::conds::*}:
+										if loop-value is {_cond}:
+											GiveAll_removeCondition({_ga}, {_cond})
+											set {_cond} to {ga::specs::%{_ga}%::conditions::%{_cond}%::fullName}
+											message "{@Prefix} {@ConditionUnset}"
+											stop
+								message "{@Prefix} {@ErrorPrefix} {@WrongCondition}"
+								message "%nl%{@Prefix} {@RemoveConditionInfo}"
+							else:
+								message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+						else:
+							message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_Condition}"
+					else:
+						message "{@NoPermission}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_Condition}"
+			else:
+				message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_Condition}"
+
+		#-----------------------------------------------------#
+		# 					   Blacklist					  #
+		#-----------------------------------------------------#
+		else if arg-1 is "blacklist" or "black" or "bl":
+			if player has permission "{@PermissionBlackList}" or "{@PermissionAll}":
+				if arg-2 is "add":
+					if check [arg-3 is set]->[arg-4 is set]:
+						set {_p} to arg-3
+						if realPlayer(arg-3):
+							if (arg-3 parsed as offline player) doesn't have permission "{@PermissionExemptBlackList}":
+								if GiveAll_gaExist(arg-4):
+									if GiveAll_isBlacklist(arg-3, arg-4) is not true:
+										set {_ga} to arg-4
+										add arg-3 to {ga::specs::%{_ga}%::blacklist::*}
+										add arg-4 to {ga::blacklist::player::%{_p}%::*}
+										message "{@Prefix} {@AddedPlayerToBlacklist}"
+										if {@DoNotifyVictimOnBlacklist}:
+											set {_e} to player
+											message "{@Prefix} {@NotifyVictimOnBlacklist}" to {_p}
+									else:
+										message "{@Prefix} {@ErrorPrefix} {@PlayerAlreadyBlacklist}"
+								else:
+									message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+							else:
+								message "{@Prefix} {@ErrorPrefix} {@PlayerIsExemptedOfBlacklist}"
+						else:
+							message "{@Prefix} {@ErrorPrefix} {@InvalidPlayer}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_BlacklistAdd}"
+				else if arg-2 is "remove" or "rem" or "delete" or "del":
+					if check [arg-3 is set]->[arg-4 is set]:
+						set {_p} to arg-3
+						if realPlayer(arg-3):
+							if GiveAll_gaExist(arg-4):
+								if GiveAll_isBlacklist(arg-3, arg-4):
+									set {_ga} to arg-4
+									remove arg-3 from {ga::specs::%{_ga}%::blacklist::*}
+									remove arg-4 from {ga::blacklist::player::%{_p}%::*}
+									set {_a::*} to {ga::specs::%{_ga}%::blacklist::*}
+									clear {ga::specs::%{_ga}%::blacklist::*}
+									set {ga::specs::%{_ga}%::blacklist::*} to {_a::*}
+									set {_b::*} to {ga::blacklist::player::%{_p}%::*}
+									clear {ga::blacklist::player::%{_p}%::*}
+									set {ga::blacklist::player::%{_p}%::*} to {_b::*}
+									message "{@Prefix} {@RemovedPlayerFromBlacklist}"
+									if {@DoNotifyVictimOnUnblacklist}:
+										set {_e} to player
+										message "{@Prefix} {@NotifyVictimOnUnblacklist}" to {_p}
+								else:
+									message "{@Prefix} {@ErrorPrefix} {@PlayerAlreadyBlacklist}"
+							else:
+								message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+						else:
+							message "{@Prefix} {@ErrorPrefix} {@InvalidPlayer}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_BlacklistRemove}"
+
+				else if arg-2 is "see" or "info" or "list":
+					if arg-4 is set:
+						if arg-3 is "p" or "player" or "j" or "joueur":
+							set {_p} to arg-4
+							if realPlayer(arg-4):
+								if size of {ga::blacklist::player::%{_p}%::*} > 0:
+									set {_bl} to "%{ga::blacklist::player::%{_p}%::*}%"
+									replace "and" with "&r{@ComaColorInList}et&r{@GAColorInList}" in {_bl}
+									replace "," with "&r{@ComaColorInList},&r{@GAColorInList}" in {_bl}
+									message "{@Prefix} {@BlackListListP} %{_bl}%"
+								else:
+									message "{@Prefix} {@PlayerIsNotBlacklistFromAnyGiveAll}"
+							else:
+								message "{@Prefix} {@ErrorPrefix} {@InvalidPlayer}"
+						else if arg-3 is "ga" or "giveall" or "give-all":
+							if GiveAll_gaExist(arg-4):
+								set {_ga} to arg-4
+								if size of {ga::specs::%{_ga}%::blacklist::*} > 0:
+									set {_bl} to "%{ga::specs::%{_ga}%::blacklist::*}%"
+									replace "and" with "&r{@ComaColorInList}et&r{@GAColorInList}" in {_bl}
+									replace "," with "&r{@ComaColorInList},&r{@GAColorInList}" in {_bl}
+									message "{@Prefix} {@BlackListListGA} %{_bl}%"
+								else:
+									message "{@Prefix} {@NoPlayerBlackListOfThisGA}"
+							else:
+								message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+						else:
+							message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_BlacklistInfo}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_BlacklistInfo}"
+				else:
+					message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_Blacklist}"
+			else:
+				message "{@NoPermission}"
+
+		#-----------------------------------------------------#
+		# 					     Group						  #
+		#-----------------------------------------------------#
+		else if arg-1 is "group" or "groupe" or "grp":
+			if arg-2 is "create" or "make":
+				if player has permission "{@PermissionGroupCreate}" or "{@PermissionGroupAll}" or "{@PermissionAll}":
+					if arg-3 is set:
+						if GiveAll_grpExist(arg-3) is not true:
+							set {_grp} to arg-3 # PlaceHolder pour le message
+							set {_n} to now formatted with "{@dateFormat}"
+							GiveAll_newGroup(arg-3, 0, 10, "%player%", "%{_n}%") # Création du groupe
+							message "{@Prefix} {@GroupCreated}"
+						else:
+							message "{@Prefix} {@ErrorPrefix} {@GroupAlreadyExists}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_CreateGroup}"
+				else:
+					message "{@NoPermission}"
+			else if arg-2 is "delete" or "del":
+				if player has permission "{@PermissionGroupDelete}" or "{@PermissionGroupAll}" or "{@PermissionAll}":
+					if arg-3 is set:
+						if GiveAll_grpExist(arg-3):
+							set {_grp} to arg-3
+							GiveAll_deleteGroup(arg-3)
+							message "{@Prefix} {@GrpDeleted}"
+						else:
+							message "{@Prefix} {@ErrorPrefix} {@GrpDoesntExist}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_DeleteGroup}"
+				else:
+					message "{@NoPermission}"
+			#else if arg-2 is "start":
+			#else if arg-2 is "stop":
+			else if arg-2 is "list":
+				if player has permission "{@PermissionGroupList}" or "{@PermissionGroupAll}" or "{@PermissionAll}":
+					set {_number} to size of {ga::glist::*}
+					if or(check [{_number} is not set], check [{_number} = 0]):
+						message "{@Prefix} {@GroupListIsEmpty}"
+					else:
+						set {_grp} to "%{ga::glist::*}%"
+						replace "and" with "&r{@ComaColorInList}et&r{@GAColorInList}" in {_grp}
+						replace "," with "&r{@ComaColorInList},&r{@GAColorInList}" in {_grp}
+						message "{@Prefix} {@GroupList} %{_grp}%"
+				else:
+					message "{@NoPermission}"
+			else if arg-2 is "info" or "inf" or "information" or "informations" or "infos":
+				if player has permission "{@PermissionGroupInfo}" or "{@PermissionGroupAll}" or "{@PermissionAll}":
+					if arg-3 is set:
+						if GiveAll_grpExist(arg-3):
+							set {_grp} to arg-3
+							set {_number} to size of {ga::gspecs::%{_grp}%::givealls::*}
+							if arg-4 is "gui":
+								if player has permission "{@PermissionGroupInfoGui}" or "{@PermissionAll}":
+									if arg-5 is not set:
+										set {_p} to 1
+									else:
+										set {_p} to arg-5 parsed as integer
+									if {_p} is not an integer:
+										set {_p} to 1
+									else:
+										set {_p} to abs({_p})
+									set {_mp} to ceil(size of {ga::list::*} / 36)
+									if {_mp} is 0:
+										set {_mp} to 1
+									if {_p} > {_mp}:
+										make player execute command "/{@MainCommand} group info %arg-3% gui %{_mp}%"
+										stop
+									open virtual chest with 6 rows named "{@TitleGroupListGui}" to player
+									set {_i} to 0
+									loop {ga::gspecs::%{_grp}%::givealls::*}:
+										if {_i} >= {_p} * 36 - 36:
+											if {_i} < {_p} * 36:
+												set {_ga} to loop-value
+												set {_nbitem} to size of {ga::specs::%{_ga}%::items::*}
+												set {_time} to "%{ga::specs::%{_ga}%::time}%"
+												set {_statut} to "{@StatusStop}"
+												set {_cd} to {ga::specs::%{_ga}%::countdown}
+												set {_conds} to GiveAll_activeConditions({_ga})
+												set {_creator} to {ga::specs::%{_ga}%::infos::creator}
+												set {_date} to {ga::specs::%{_ga}%::infos::date}
+												if {ga::specs::%{_ga}%::status} is "Countdown":
+													set {_action} to "{@LeftClickActionStop}"
+													set {_statut} to "{@StatusInCountDown}"
+												else if {ga::specs::%{_ga}%::status} is "In Progress":
+													set {_action} to "{@LeftClickActionStop}"
+													set {_statut} to "{@StatusInProgress}"
+												if {ga::specs::%{_ga}%::time} is 0:
+													set {_time} to "{@InfiniteTimeForGUIList}"
+												set {_blacklist} to 0
+												if size of {ga::specs::%{_ga}%::blacklist::*} > 0:
+													set {_blacklist} to size of {ga::specs::%{_ga}%::blacklist::*}
+												set {_action} to "{@LeftClickActionCantStart}"
+												if size of {ga::specs::%{_ga}%::items::*} > 0:
+													set {_action} to "{@LeftClickActionStart}"
+													format gui slot {_i} - 36 * ({_p} - 1) of player with a paper named "{@GAListItem}" with lore "{@LoreGAList}" to run function GiveAll_listOptionsGUI(player, "gauche", "%loop-value%") with left mouse button
+												format gui slot {_i} - 36 * ({_p} - 1) of player with a Paper named "{@GAListItem}" with lore "{@LoreGAList}" to run function GiveAll_listOptionsGUI(player, "droit", "%loop-value%") with right mouse button
+												format gui slot {_i} - 36 * ({_p} - 1) of player with a paper named "{@GAListItem}" with lore "{@LoreGAList}" to run function GiveAll_listOptionsGUI(player, "shiftdroit", "%loop-value%") with right mouse button with shift
+												format gui slot {_i} - 36 * ({_p} - 1) of player with a paper named "{@GAListItem}" with lore "{@LoreGAList}" to run function GiveAll_listOptionsGUI(player, "middle", "%loop-value%") with middle mouse button
+												format gui slot {_i} - 36 * ({_p} - 1) of player with a paper named "{@GAListItem}" with lore "{@LoreGAList}" to run function GiveAll_listOptionsGUI(player, "shiftgauche", "%loop-value%") with left mouse button with shift
+										add 1 to {_i}
+									if {_p} != {_mp}:
+										format gui slot 50 of player with an arrow named "{@NextPage}" to run player command "/{@MainCommand} group info %arg-3% gui %({_p} + 1)%"
+									if {_p} != 1:
+										format gui slot 48 of player with an arrow named "{@PreviousPage}" to run player command "/{@MainCommand} group info %arg-3% gui %({_p} - 1)%"
+									format gui slot 49 of player with name tag named "{@InfoPageItem}" with lore "{@LoreInfoPageItem}"
+									format gui slot 36, 38, 40, 42 and 44 of player with white glass pane named "&r"
+									format gui slot 37, 39, 41 and 43 of player with blue glass pane named "&r"
+									format gui slot 53 of player with a barrier named "{@CloseGUIItem}" to close
+
+								else:
+									make player execute command "/{@MainCommand} group info %arg-3%"
+							else if or(check [{_number} is not set], check [{_number} = 0]):
+								message "{@Prefix} {@GroupContainsNoGiveAlls}"
+							else:
+								set {_grpL} to "%{ga::gspecs::%{_grp}%::givealls::*}%"
+								replace "and" with "&r{@ComaColorInList}et&r{@GAColorInList}" in {_grpL}
+								replace "," with "&r{@ComaColorInList},&r{@GAColorInList}" in {_grpL}
+								message "{@Prefix} {@GroupInfo} %{_grpL}%"
+						else:
+							message "{@Prefix} {@ErrorPrefix} {@GrpDoesntExist}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_GroupInfo}"
+				else:
+					message "{@NoPermission}"
+			else if arg-2 is "add" or "addga" or "addgiveall":
+				if player has permission "{@PermissionGroupAddGa}" or "{@PermissionGroupAll}" or "{@PermissionAll}":
+					if check [arg-3 is set]->[arg-4 is set]:
+						if GiveAll_grpExist(arg-3):
+							if GiveAll_gaExist(arg-4):
+								set {_grp} to arg-3
+								set {_ga} to arg-4
+								if contains({ga::gspecs::%{_grp}%::givealls::*}, {_ga}) is not true:
+									GiveAll_addGaToGroup({_ga}, {_grp})
+									message "{@Prefix} {@SuccessfullyAddedGaToGroup}"
+								else:
+									message "{@Prefix} {@ErrorPrefix} {@GrpAlreadyContainsGa}"
+							else:
+								message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+						else:
+							message "{@Prefix} {@ErrorPrefix} {@GrpDoesntExist}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_AddGaToGroup}"
+				else:
+					message "{@NoPermission}"
+			else if arg-2 is "rem" or "remove" or "remga" or "removega":
+				if player has permission "{@PermissionGroupRemoveGa}" or "{@PermissionGroupAll}" or "{@PermissionAll}":
+					if check [arg-3 is set]->[arg-4 is set]:
+						if GiveAll_grpExist(arg-3):
+							if GiveAll_gaExist(arg-4):
+								set {_grp} to arg-3
+								set {_ga} to arg-4
+								if contains({ga::gspecs::%{_grp}%::givealls::*}, {_ga}):
+									GiveAll_removeGaFromGroup({_ga}, {_grp})
+									message "{@Prefix} {@SuccessfullyRemovedGaFromGroup}"
+								else:
+									message "{@Prefix} {@ErrorPrefix} {@GrpDoesntContainsGa}"
+							else:
+								message "{@Prefix} {@ErrorPrefix} {@GADoesntExist}"
+						else:
+							message "{@Prefix} {@ErrorPrefix} {@GrpDoesntExist}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_AddGaToGroup}"
+				else:
+					message "{@NoPermission}"
+			else if arg-2 is "clear":
+				if player has permission "{@PermissionGroupClear}" or "{@PermissionGroupAll}" or "{@PermissionAll}":
+					if arg-3 is set:
+						if GiveAll_grpExist(arg-3):
+							set {_grp} to arg-3
+							if size of {ga::gspecs::%{_grp}%::givealls::*} > 0:
+								GiveAll_clearGroup({_grp})
+								message "{@Prefix} {@SuccessfullyClearedGroup}"
+							else:
+								message "{@Prefix} {@ErrorPrefix} {@GroupListIsEmpty}"
+						else:
+							message "{@Prefix} {@ErrorPrefix} {@GrpDoesntExist}"
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@WrongCommandSyntax_ClearGroup}"
+				else:
+					message "{@NoPermission}"
+			else if arg-2 is "purge":
+				if player has permission "{@PermissionGroupPurge}" or "{@PermissionGroupAll}" or "{@PermissionAll}":
+					if size of {ga::glist::*} > 0:
+						set {_total} to size of {ga::glist::*}
+						if {ga::player::%player%::gpurge}:
+							clear {ga::player::%player%::gpurge}
+							GiveAll_purgeGroup()
+							message "{@Prefix} {@SuccessfullyPurgedGroup}"
+						else:
+							set {ga::player::%player%::gpurge} to true
+							message "{@Prefix} {@PleaseConfirmPurgeGroup}"
+							wait {@purgeConfirmExpire} seconds
+							clear {ga::player::%player%::gpurge}
+					else:
+						message "{@Prefix} {@ErrorPrefix} {@GroupListIsEmpty}"
+				else:
+					message "{@NoPermission}"
+			else:
+				if player has permission "{@PermissionHelp}" or "{@PermissionGroupAll}" or "{@PermissionAll}":
+					message "&r"
+					message "{@Prefix} <tooltip:&a/ga group create <groupe>%nl%&7Créer un nouveau groupe%nl%&7 » Alias : make%nl%&7 » Permission : %(""&a{@PermissionGroupCreate} &7(&a✔&7)"") if player has permission ""{@PermissionGroupCreate}"", else (""&c{@PermissionGroupCreate} &7(&c✘&7)"")%%nl%&7 » Permission : %(""&a{@PermissionGroupAll} &7(&a✔&7)"") if player has permission ""{@PermissionGroupAll}"", else (""&c{@PermissionGroupAll} &7(&c✘&7)"")%><suggest command:/{@MainCommand} group create MonGroupe>&a/{@MainCommand} &fgroup create <nom>"
+					message "{@Prefix} <tooltip:&a/ga group delete <groupe>%nl%&7Supprimer un groupe%nl%&7 » Alias : del%nl%&7 » Permission : %(""&a{@PermissionGroupDelete} &7(&a✔&7)"") if player has permission ""{@PermissionGroupDelete}"", else (""&c{@PermissionGroupDelete} &7(&c✘&7)"")%%nl%&7 » Permission : %(""&a{@PermissionGroupAll} &7(&a✔&7)"") if player has permission ""{@PermissionGroupAll}"", else (""&c{@PermissionGroupAll} &7(&c✘&7)"")%><suggest command:/{@MainCommand} group delete MonGroupe>&a/{@MainCommand} &fgroup delete <nom>"
+					message "{@Prefix} <tooltip:&a/ga group start <groupe>%nl%&7Lancer les givealls d'un groupe%nl%&7 » Permission : %(""&a{@PermissionGroupStart} &7(&a✔&7)"") if player has permission ""{@PermissionGroupStart}"", else (""&c{@PermissionGroupStart} &7(&c✘&7)"")%%nl%&7 » Permission : %(""&a{@PermissionGroupAll} &7(&a✔&7)"") if player has permission ""{@PermissionGroupAll}"", else (""&c{@PermissionGroupAll} &7(&c✘&7)"")%><suggest command:/{@MainCommand} group delete MonGroupe>&a/{@MainCommand} &fgroup delete <nom>"
+					message "{@Prefix} <tooltip:&a/ga group stop <groupe>%nl%&7Arrêter les givalls d'un groupe%nl%&7 » Permission : %(""&a{@PermissionGroupStop} &7(&a✔&7)"") if player has permission ""{@PermissionGroupStop}"", else (""&c{@PermissionGroupStop} &7(&c✘&7)"")%%nl%&7 » Permission : %(""&a{@PermissionGroupAll} &7(&a✔&7)"") if player has permission ""{@PermissionGroupAll}"", else (""&c{@PermissionGroupAll} &7(&c✘&7)"")%><suggest command:/{@MainCommand} group delete MonGroupe>&a/{@MainCommand} &fgroup delete <nom>"
+					message "{@Prefix} <tooltip:&a/ga group list%nl%&7Voir la liste des groupes%nl%&7 » Permission : %(""&a{@PermissionGroupList} &7(&a✔&7)"") if player has permission ""{@PermissionGroupList}"", else (""&c{@PermissionGroupList} &7(&c✘&7)"")%%nl%&7 » Permission : %(""&a{@PermissionGroupAll} &7(&a✔&7)"") if player has permission ""{@PermissionGroupAll}"", else (""&c{@PermissionGroupAll} &7(&c✘&7)"")%><suggest command:/{@MainCommand} group list>&a/{@MainCommand} &fgroup list"
+					message "{@Prefix} <tooltip:&a/ga group info <groupe>%nl%&7Voir les informations d'un groupe%nl%&7 » Alias : infos, inf, information, informations%nl%&7 » Permission : %(""&a{@PermissionGroupInfo} &7(&a✔&7)"") if player has permission ""{@PermissionGroupInfo}"", else (""&c{@PermissionGroupInfo} &7(&c✘&7)"")%%nl%&7 » Permission : %(""&a{@PermissionGroupAll} &7(&a✔&7)"") if player has permission ""{@PermissionGroupAll}"", else (""&c{@PermissionGroupAll} &7(&c✘&7)"")%><suggest command:/{@MainCommand} group info MonGroupe>&a/{@MainCommand} &fgroup info <nom>"
+					message "{@Prefix} <tooltip:&a/ga group add <groupe> <giveall>%nl%&7Ajouter un GiveAll à un groupe%nl%&7 » Alias : addga, addgiveall%nl%&7 » Permission : %(""&a{@PermissionGroupAddGa} &7(&a✔&7)"") if player has permission ""{@PermissionGroupAddGa}"", else (""&c{@PermissionGroupAddGa} &7(&c✘&7)"")%%nl%&7 » Permission : %(""&a{@PermissionGroupAll} &7(&a✔&7)"") if player has permission ""{@PermissionGroupAll}"", else (""&c{@PermissionGroupAll} &7(&c✘&7)"")%><suggest command:/{@MainCommand} group add MonGroupe MonGiveAll>&a/{@MainCommand} &fgroup add <nom> <giveall>"
+					message "{@Prefix} <tooltip:&a/ga group rem <groupe> <giveall>%nl%&7Enlever un GiveAll à un groupe%nl%&7 » Alias : remga, remove, removega%nl%&7 » Permission : %(""&a{@PermissionGroupRemoveGa} &7(&a✔&7)"") if player has permission ""{@PermissionGroupRemoveGa}"", else (""&c{@PermissionGroupRemoveGa} &7(&c✘&7)"")%%nl%&7 » Permission : %(""&a{@PermissionGroupAll} &7(&a✔&7)"") if player has permission ""{@PermissionGroupAll}"", else (""&c{@PermissionGroupAll} &7(&c✘&7)"")%><suggest command:/{@MainCommand} group remove MonGroupe MonGiveAll>&a/{@MainCommand} &fgroup remove <nom> <giveall>"
+					message "{@Prefix} <tooltip:&a/ga group clear <groupe>%nl%&7Enlever tous les GiveAlls d'un groupe%nl%&7 » Permission : %(""&a{@PermissionGroupClear} &7(&a✔&7)"") if player has permission ""{@PermissionGroupClear}"", else (""&c{@PermissionGroupClear} &7(&c✘&7)"")%%nl%&7 » Permission : %(""&a{@PermissionGroupAll} &7(&a✔&7)"") if player has permission ""{@PermissionGroupAll}"", else (""&c{@PermissionGroupAll} &7(&c✘&7)"")%><suggest command:/{@MainCommand} group clear MonGroupe>&a/{@MainCommand} &fgroup clear <nom>"
+					message "{@Prefix} <tooltip:&a/ga group purge%nl%&7Supprimer tous les groupes%nl%&7 » Permission : %(""&a{@PermissionGroupPurge} &7(&a✔&7)"") if player has permission ""{@PermissionGroupPurge}"", else (""&c{@PermissionGroupPurge} &7(&c✘&7)"")%%nl%&7 » Permission : %(""&a{@PermissionGroupAll} &7(&a✔&7)"") if player has permission ""{@PermissionGroupAll}"", else (""&c{@PermissionGroupAll} &7(&c✘&7)"")%><suggest command:/{@MainCommand} group purge>&a/{@MainCommand} &fgroup purge"
+					message "{@Prefix} <tooltip:&a/ga group help%nl%&7Afficher cette page%nl%&7 » Permission : %(""&a{@PermissionHelp} &7(&a✔&7)"") if player has permission ""{@PermissionHelp}"", else (""&c{@PermissionHelp} &7(&c✘&7)"")%%nl%&7 » Permission : %(""&a{@PermissionGroupAll} &7(&a✔&7)"") if player has permission ""{@PermissionGroupAll}"", else (""&c{@PermissionGroupAll} &7(&c✘&7)"")%><suggest command:/{@MainCommand} group help>&a/{@MainCommand} &fgroup help"
+				else:
+					message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 						Reload 						  #
+		#-----------------------------------------------------#
+		else if arg-1 is "reload" or "rl":
+			if player has permission "{@PermissionReload}" or "{@PermissionAll}":
+				set {_t} to now
+				message "{@Prefix} {@Reloading}"
+				message "[GiveAll] {@Reloading}" to console
+				wait 1 ticks # Pour que le message ait le temps de s'afficher...
+				make player execute command "/sk reload %script's name%"
+				send "[GiveAll] Script chargé ! Débug en cours..." to console #
+				set {_pb::*} to GiveAll_debug()
+				wait 10 ticks
+				if size of {_pb::*} > 0:
+					send "[GiveAll] &c%size of {_pb::*}% problème%(""s"") if size of {_pb::*} > 1, else """"% trouvé%(""s"") if size of {_pb::*} > 1, else """"% !" to console #
+					message "{@Prefix} &c%size of {_pb::*}% problème%(""s"") if size of {_pb::*} > 1, else """"% trouvé%(""s"") if size of {_pb::*} > 1, else """"% ! Merci de regarder la console pour le%(""s"") if size of {_pb::*} > 1, else """"% voir :)" #
+					loop {_pb::*}:
+						send "[GiveAll] [ERROR]    - %loop-value%" to console
+				send "[GiveAll] Débug terminé !" to console #
+				set {_time} to "%difference between {_t} and now%"
+				replace all "second" with "seconde" in {_time}
+				send "[GiveAll] &aChargement de &f1 commande&a, &f21 sous-commandes&a et &f%size of {ga::list::*}% GiveAll%(""s"") if size of {ga::list::*} > 1, else """"%&a en %{_time}%s" to console
+				message "{@Prefix} {@Reloaded}"
+			else:
+				message "{@NoPermission}"
+
+		#-----------------------------------------------------#
+		# 						Requis 						  #
+		#-----------------------------------------------------#
+		else if arg-1 is "api" or "requirement" or "requirements" or "require":
+			if player has permission "{@PermissionAll}":
+				message "{@Prefix} &aPour fonctionner correctement et pouvoir bénéficier de toutes les fonctionnalités, ce script nécéssite d'autres script et plugins:"
+				message "{@Prefix} <tooltip:&7Clique pour télécharger><url:https://skripttools.net/addons?q=SkQuery-Lime>&2    - SkQuery-Lime &7(v3.6.1+) — Diverses fonctionnalités"
+				message "{@Prefix} <tooltip:&7Clique pour télécharger><url:https://skripttools.net/addons?q=TuSKe>&2    - TuSKe &7(v1.8.2+) — Les GUIs et les RegEx"
+				message "{@Prefix} <tooltip:&7Clique pour télécharger><url:https://bit.ly/2SvvRZr>&2    - PlayTime &7(v2.1.3+) — Les conditions de temps de connexion"
+				message "{@Prefix} <tooltip:&7Clique pour télécharger><url:https://dev.bukkit.org/projects/worldguard/files>&2    - WorldGuard &7(v6+) — Les conditions de région"
+				message "{@Prefix} <tooltip:&7Clique pour télécharger><url:https://dev.bukkit.org/projects/vault/files>&2    - Vault &7(ou un autre plugin d'économie) — Les conditions d'argent"
+			else:
+				message "{@NoPermission}"
+		#-----------------------------------------------------#
+		# 						Update 						  #
+		#-----------------------------------------------------#
+		else if arg-1 is "update" or "maj" or "check" or "updatecheck":
+			if player has permission "{@PermissionUpdateCheck}" or "{@PermissionAll}":
+				updateCheck(player)
+			else:
+				message "{@NoPermission}"
+
+		#-----------------------------------------------------#
+		# 						Aide 						  #
+		#-----------------------------------------------------#
+		else:
+			if player has permission "{@PermissionHelp}" or "{@PermissionAll}":
+				message "&r"
+				message "&r"
+				message "&r"
+				set {_plus} to "&2✔"
+				set {_info} to "&aVotre version est a jour !"
+				if text from "https://raw.githubusercontent.com/noftaly/GiveAll/master/version" isn't "{@version}":
+					set {_plus} to "&c✖"
+					set {_info} to "&cVous n'avez pas la dernière version...%nl%&7Il est recommandé de toujours avoir la dernière version, pour profiter des fixs de bugs et des nouvelles fonctionnalités."
+				message "{@Prefix} &aGiveAll &2by &a~&a&lnoftaly <tooltip:%{_info}%>&3({@version} %{_plus}%&3)" # SVP laissez une trace de mon travail :) 2500 lignes de codes ca ce sort pas en 5 min un bon matin sans réfléchir, j'y ai passé énormément de temps...
+																												# En plus il n'y a que les gens avec une perm qui voient ca... 
+																												# Merci beaucoup :p
+				message "&r"
+				if arg-2 is "2":
+					message "{@Prefix}&r     <tooltip:&7&oAller à la &f&opage 1><command:/{@MainCommand} help 1>&aPage &22&a/&22 &2&l&k|<reset>&3 <>&a: obligatoire, &3[]&a: facultatif"
+					message "{@Prefix} <tooltip:&a/ga settime <nom> <temps (en seconde)>%nl%&7Changer la durée d'un GiveAll &7&o(0 = infini)%nl%&7 » Alias : setime, changetime, changet, ctime, ct%nl%&7 » Permission : %(""&a{@PermissionChangeTime} &7(&a✔&7)"") if player has permission ""{@PermissionChangeTime}"", else (""&c{@PermissionChangeTime} &7(&c✘&7)"")%><suggest command:/{@MainCommand} settime MonGiveAll temps (en seconde)>&a/{@MainCommand} &fsettime <nom> <temps (en seconde)>"
+					message "{@Prefix} <tooltip:&a/ga setcountdown <nom> <temps (en seconde)>%nl%&7Changer la durée du compte à rebours d'un GiveAll%nl%&7 » Alias : setcd, scd, changecountdown, changecd, ccd%nl%&7 » Permission : %(""&a{@PermissionChangeCountDown} &7(&a✔&7)"") if player has permission ""{@PermissionChangeCountDown}"", else (""&c{@PermissionChangeCountDown} &7(&c✘&7)"")%><suggest command:/{@MainCommand} setcountdown MonGiveAll temps (en seconde)>&a/{@MainCommand} &fsetcountdown <nom> <temps (en seconde)>"
+					message "{@Prefix} <tooltip:&a/ga edit <nom> [page]%nl%&7Modifier les items d'un GiveAll%nl%&7 » Alias : edititems, edititem%nl%&7 » Permission : %(""&a{@PermissionEditItem} &7(&a✔&7)"") if player has permission ""{@PermissionEditItem}"", else (""&c{@PermissionEditItem} &7(&c✘&7)"")%><suggest command:/{@MainCommand} edit MonGiveAll>&a/{@MainCommand} &fedit <nom>"
+					message "{@Prefix} <tooltip:&a/ga copyitem <giveall d'import> <giveall d'export>%nl%&7Copier les items d'un GiveAll dans un autre%nl%&7 » Alias : copycontent, copy%nl%&7 » Permission : %(""&a{@PermissionCopyContent} &7(&a✔&7)"") if player has permission ""{@PermissionCopyContent}"", else (""&c{@PermissionCopyContent} &7(&c✘&7)"")%><suggest command:/{@MainCommand} copyitem GiveAll1 GiveAll2>&a/{@MainCommand} &fcopyitem <giveall import> <giveall export>"
+					message "{@Prefix} <tooltip:&a/ga clear <nom>%nl%&7Supprimer tous les items d'un GiveAll%nl%&7 » Permission : %(""&a{@PermissionClearGA} &7(&a✔&7)"") if player has permission ""{@PermissionClearGA}"", else (""&c{@PermissionClearGA} &7(&c✘&7)"")%><suggest command:/{@MainCommand} clear MonGiveAll>&a/{@MainCommand} &fclear <nom>"
+					set {_c1} to "&2➤ &a/ga condition see <nom>%nl%&7Voir les conditions d'un GiveAll%nl%&7 » Alias : list%nl%&7 » Permission : %(""&a{@PermissionSeeCondition} &7(&a✔&7)"") if player has permission ""{@PermissionSeeCondition}"", else (""&c{@PermissionSeeCondition} &7(&c✘&7)"")%"
+					set {_c2} to "&2➤ &a/ga condition set <nom> <condition> <valeur>%nl%&7Ajouter une condition à un GiveAll%nl%&7 » Alias : add%nl%&7 » Permission : %(""&a{@PermissionModifyCondition} &7(&a✔&7)"") if player has permission ""{@PermissionModifyCondition}"", else (""&c{@PermissionModifyCondition} &7(&c✘&7)"")%"
+					set {_c3} to "&2➤ &a/ga condition remove <nom> <condition/all>%nl%&7Supprimer les conditions d'un GiveAll%nl%&7 » Alias : rem, delete, del%nl%&7 » Permission : %(""&a{@PermissionModifyCondition} &7(&a✔&7)"") if player has permission ""{@PermissionModifyCondition}"", else (""&c{@PermissionModifyCondition} &7(&c✘&7)"")%"
+					message "{@Prefix} <tooltip:%{_c1}%%nl%%nl%%{_c2}%%nl%%nl%%{_c3}%><suggest command:/{@MainCommand} condition see/set/remove MonGiveAll>&a/{@MainCommand} &fcondition <see/set/remove> <nom> [condition] [valeur]"
+					set {_c1} to "&2➤ &a/ga blacklist see <player/giveall>%nl%&7Voir les GiveAlls dont un joueur est banni, ou voir la liste des joueurs bannis d'un GiveAll%nl%&7 » Alias : list, info%nl%&7 » Permission : %(""&a{@PermissionBlackList} &7(&a✔&7)"") if player has permission ""{@PermissionBlackList}"", else (""&c{@PermissionBlackList} &7(&c✘&7)"")%"
+					set {_c2} to "&2➤ &a/ga blacklist add <player> <giveall>%nl%&7Ajouter un joueur à la blacklist d'un GiveAll%nl%&7 » Permission : %(""&a{@PermissionBlackList} &7(&a✔&7)"") if player has permission ""{@PermissionBlackList}"", else (""&c{@PermissionBlackList} &7(&c✘&7)"")%"
+					set {_c3} to "&2➤ &a/ga blacklist remove <player> <giveall>%nl%&7Enlever un joueur de la blacklist d'un GiveAll%nl%&7 » Alias : rem, delete, del%nl%&7 » Permission : %(""&a{@PermissionBlackList} &7(&a✔&7)"") if player has permission ""{@PermissionBlackList}"", else (""&c{@PermissionBlackList} &7(&c✘&7)"")%"
+					message "{@Prefix} <tooltip:%{_c1}%%nl%%nl%%{_c2}%%nl%%nl%%{_c3}%><suggest command:/{@MainCommand} blacklist see/add/remove>&a/{@MainCommand} &fblacklist <see/add/remove> [joueur] [giveall]"
+					message "{@Prefix} <tooltip:&a/ga group help%nl%&7Voir la liste des commandes de groupe%nl%&7 » Permission : %(""&a{@PermissionHelp} &7(&a✔&7)"") if player has permission ""{@PermissionHelp}"", else (""&c{@PermissionHelp} &7(&c✘&7)"")%><suggest command:/{@MainCommand} group help>&a/{@MainCommand} &fgroup help"
+					message "{@Prefix} <tooltip:&a/ga list [gui] [page]%nl%&7Voir la liste des GiveAlls%nl%&7 » Permission : %(""&a{@PermissionChatList} &7(&a✔&7)"") if player has permission ""{@PermissionChatList}"", else (""&c{@PermissionChatList} &7(&c✘&7)"")%%nl%&7 » Permission : %(""&a{@PermissionGUIList} &7(&a✔&7)"") if player has permission ""{@PermissionGUIList}"", else (""&c{@PermissionGUIList} &7(&c✘&7)"")%><suggest command:/{@MainCommand} list (gui)>&a/{@MainCommand} &flist [gui]"
+					message "{@Prefix} <tooltip:&a/ga api%nl%&7Voir les prérequis de ce script%nl%&7 » Permission : %(""&a{@PermissionAll} &7(&a✔&7)"") if player has permission ""{@PermissionAll}"", else (""&c{@PermissionAll} &7(&c✘&7)"")%><suggest command:/{@MainCommand} api>&a/{@MainCommand} &fapi"
+					message "{@Prefix} <tooltip:&a/ga update%nl%&7Voir si une nouvelle version est disponible%nl%&7 » Alias : maj, check, updatecheck%nl%&7 » Permission : %(""&a{@PermissionUpdateCheck} &7(&a✔&7)"") if player has permission ""{@PermissionUpdateCheck}"", else (""&c{@PermissionUpdateCheck} &7(&c✘&7)"")%><suggest command:/{@MainCommand} update>&a/{@MainCommand} &fupdate"
+				else:
+					message "{@Prefix}&r     <tooltip:&7&oAller à la &f&opage 2><command:/{@MainCommand} help 2>&aPage &21&a/&22 &2&l&k|<reset>&3 <>&a: obligatoire, &3[]&a: facultatif"
+					message "{@Prefix} <tooltip:&a/ga create <nom> [t:temps] [cd:temps]%nl%&7Créer un GiveAll. Pour t: et cd: il faut les écrires, suivi (sans espaces) de la durée correspondante, en secondes.%nl%&7 » Alias : make%nl%&7 » Permission : %(""&a{@PermissionCreate} &7(&a✔&7)"") if player has permission ""{@PermissionCreate}"", else (""&c{@PermissionCreate} &7(&c✘&7)"")%><suggest command:/{@MainCommand} create MonGiveAll (i)>&a/{@MainCommand} &fcreate <nom> [temps]"
+					message "{@Prefix} <tooltip:&a/ga delete <nom>%nl%&7Supprimer un GiveAll%nl%&7 » Alias : del, remove, rem%nl%&7 » Permission : %(""&a{@PermissionDelete} &7(&a✔&7)"") if player has permission ""{@PermissionDelete}"", else (""&c{@PermissionDelete} &7(&c✘&7)"")%><suggest command:/{@MainCommand} delete MonGiveAll>&a/{@MainCommand} &fdelete <nom>"
+					message "{@Prefix} <tooltip:&a/ga start <nom> [t:temps] [cd:temps]%nl%&7Commencer un GiveAll. Pour t: et cd: il faut les écrires, suivi (sans espaces) de la durée correspondante, en secondes. Vous pouvez mettre le compte a rebours à 0 pour le lancer instantanément.%nl%&7 » Permission : %(""&a{@PermissionStart} &7(&a✔&7)"") if player has permission ""{@PermissionStart}"", else (""&c{@PermissionStart} &7(&c✘&7)"")%><suggest command:/{@MainCommand} start MonGiveAll>&a/{@MainCommand} &fstart <nom> [i]"
+					message "{@Prefix} <tooltip:&a/ga stop <nom>%nl%&7Arrêter un GiveAll%nl%&7 » Permission : %(""&a{@PermissionStop} &7(&a✔&7)"") if player has permission ""{@PermissionStop}"", else (""&c{@PermissionStop} &7(&c✘&7)"")%><suggest command:/{@MainCommand} stop MonGiveAll>&a/{@MainCommand} &fstop <nom>"
+					message "{@Prefix} <tooltip:&a/ga purge%nl%&7Supprimer tous les GiveAlls%nl%&7 » Permission : %(""&a{@PermissionPurge} &7(&a✔&7)"") if player has permission ""{@PermissionPurge}"", else (""&c{@PermissionPurge} &7(&c✘&7)"")%><suggest command:/{@MainCommand} purge>&a/{@MainCommand} &fpurge"
+					message "{@Prefix} <tooltip:&a/ga rename <nom> <nouveau nom>%nl%&7Renommer un GiveAll%nl%&7 » Permission : %(""&a{@PermissionRename} &7(&a✔&7)"") if player has permission ""{@PermissionRename}"", else (""&c{@PermissionRename} &7(&c✘&7)"")%><suggest command:/{@MainCommand} rename MonGiveAll MonNouveauGiveAll>&a/{@MainCommand} &frename <nom> <nouveau nom>"
+					message "{@Prefix} <tooltip:&a/ga duplicate <nom>%nl%&7Dupliquer un GiveAll%nl%&7 » Permission : %(""&a{@PermissionDuplicate} &7(&a✔&7)"") if player has permission ""{@PermissionDuplicate}"", else (""&c{@PermissionDuplicate} &7(&c✘&7)"")%><suggest command:/{@MainCommand} duplicate MonGiveAll>&a/{@MainCommand} &fduplicate <nom>"
+					message "{@Prefix} <tooltip:&a/ga modify <nom>%nl%&7Modifier un GiveAll%nl%&7 » Permission : %(""&a{@PermissionModify} &7(&a✔&7)"") if player has permission ""{@PermissionModify}"", else (""&c{@PermissionModify} &7(&c✘&7)"")%><suggest command:/{@MainCommand} modify MonGiveAll>&a/{@MainCommand} &fmodify <nom>"
+					message "{@Prefix} <tooltip:&a/ga drop <nom> <drop/give>%nl%&7Modifier le mode de drop d'un GiveAll%nl%&7 » Alias : droptype, changedroptype%nl%&7 » Permission : %(""&a{@PermissionChangeDropType} &7(&a✔&7)"") if player has permission ""{@PermissionChangeDropType}"", else (""&c{@PermissionChangeDropType} &7(&c✘&7)"")%><suggest command:/{@MainCommand} drop MonGiveAll give/drop>&a/{@MainCommand} &fdrop <nom> <give/drop>"
+					message "{@Prefix} <tooltip:&a/ga add <nom>%nl%&7Ajouter un item à un GiveAll%nl%&7 » Alias : addi, additem, additems%nl%&7 » Permission : %(""&a{@PermissionAddItem} &7(&a✔&7)"") if player has permission ""{@PermissionAddItem}"", else (""&c{@PermissionAddItem} &7(&c✘&7)"")%><suggest command:/{@MainCommand} add MonGiveAll>&a/{@MainCommand} &fadd <nom>"
+					message "{@Prefix} <tooltip:&a/ga givehand [monde]%nl%&7Donner l'item que vous tenez en main à tout le monde%nl%&7 » Alias : gh%nl%&7 » Permission : %(""&a{@PermissionGiveHand} &7(&a✔&7)"") if player has permission ""{@PermissionGiveHand}"", else (""&c{@PermissionGiveHand} &7(&c✘&7)"")%><suggest command:/{@MainCommand} givehand (world)>&a/{@MainCommand} &fgivehand [monde]"
+
+		#-----------------------------------------------------#
+		# 				 	  Évènements 					  #
+		#-----------------------------------------------------#
+on join:
+	clear {ga::player::%player%::editingItems}
+	clear {ga::player::%player%::dropToAdd}
+	if {ga::player::%player%::cond::death} is not set:
+		set {ga::player::%player%::cond::death} to 0
+		set {ga::player::%player%::cond::kill} to 0
+	if {ga::player::%player%::dispMode} is not set:
+		set {ga::player::%player%::dispMode} to "GroupsAndGa"
+	if player has permission "{@PermissionUpdateCheck}" or "{@PermissionAll}":
+		wait 2 seconds
+		updateCheck(player)
+	if realPlayer("%player%") is false:
+		add "%player%" to {ga::debug::allplayers::*}
+
+on load:
+	locally suppress conjunction warnings
+	locally suppress conflict warnings
+	GiveAll_init()
+	#wait 1 second
+	#loop all players:
+	#	if loop-player has permission "{@PermissionUpdateCheck}" or "{@PermissionAll}":
+	#		updateCheck(loop-player)
+	#	if loop-player has permission "{@PermissionReload}" or "{@PermissionAll}":
+	#		message "{@Prefix} &c&lRappel important : &r&cPour recharger le script correctement, utiliser &4/ga reload&c uniquement. Même après un restart." to loop-player
+
+on drop:
+	if {ga::player::%player%::dropToAdd}:
+		cancel event
+		wait 1 tick
+		remove event-item from player's inventory
+		clear {ga::player::%player%::dropToAdd}
+
+on inventory close:
+	clear {ga::player::%player%::editingItems}
+
+on chat:
+	if size of {ga::current::*} > 0:
+		loop {ga::current::*}:
+			if {ga::specs::%loop-value%::conditions::msg-same::isEnable}:
+				if message is {ga::specs::%loop-value%::conditions::msg-same::value}:
+					add 1 to {ga::player::%player%::cond::msg-same::%loop-value%}
+					loop {ga::debug::maxGiveTime} times:
+						wait 1 second
+					remove 1 from {ga::player::%player%::cond::msg-same::%loop-value%}
+					if {ga::player::%player%::cond::msg-same::%loop-value%} < 0:
+						set {ga::player::%player%::cond::msg-same::%loop-value%} to 0
+			if {ga::specs::%loop-value%::conditions::msg-contain::isEnable}:
+				if message contains {ga::specs::%loop-value%::conditions::msg-contain::value}:
+					add 1 to {ga::player::%player%::cond::msg-contain::%loop-value%}
+					loop {ga::debug::maxGiveTime} times:
+						wait 1 second
+					remove 1 from {ga::player::%player%::cond::msg-contain::%loop-value%}
+					if {ga::player::%player%::cond::msg-contain::%loop-value%} < 0:
+						set {ga::player::%player%::cond::msg-contain::%loop-value%} to 0
+
+on death of a player:
+	if attacker is a player:
+		add 1 to {ga::player::%attacker%::cond::kill}
+	add 1 to {ga::player::%victim%::cond::death}
+
+on command "/ver GiveAll":
+	cancel event
+	message "&aGiveAll&f version&a {@version}"
+	message "&fCréé simplement des GiveAlls, puis modifie-les à ta guise !"
+	message "&fDownload link: &ahttps://bit.ly/2tLQ1nR"
+	message "&fAuthors: &anoftaly"
